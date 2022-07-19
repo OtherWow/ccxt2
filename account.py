@@ -31,8 +31,8 @@ class Account(object):
         self.buy_touch_price = 0.0  # 买入触发价格
         self.last_entry_num = 0.0  # 最后一次的仓位数量
         self.min_entry_num = 0.0  # 最小仓位数量
-        self.limit_order_book = {}  # 限价单订单簿
-        self.stop_profit_order_book = []  # 止盈止损订单号
+        self.限价单订单簿 = []  # 限价单订单簿
+        self.止盈止损订单簿 = []  # 止盈止损订单号
         # 自定义参数
         # ==========================================apiKey=========================================
         if name == "cx":
@@ -54,11 +54,14 @@ class Account(object):
         # ==========================================交易对相关参数设置===================================
         self.symbol = 'LUNA2BUSD'  # 交易对  LUNA2BUSD   ETHUSDT
         self.websocket_symbol = 'luna2busd'  # 交易对  luna2busd   ethusdt
-        self.symbol_precision = 4  # 交易对精度
+        self.市价手续费率 = 0.0003  # 手续费率
+        self.限价手续费率 = 0.00012  # 手续费率
+        self.交易对价格精度 = 4  # 交易对价格精度
+        self.交易对数量精度 = 0  # 交易对价格精度
         self.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
         self.position_side = 'SHORT'  # 持仓方向 可选参数 SHORT(做空) LONG(做多)
-        self.first_order_num = 100  # 首单数量
-        self.first_order_type = 'MARKET'  # 首单挂单类型 支持 MARKET(市价单) LIMIT(限价单)
+        self.首单数量 = 50  # 首单数量
+        self.first_order_type = 'LIMIT'  # 首单挂单类型 支持 MARKET(市价单) LIMIT(限价单)
         self.leverage = 20.0  # 杠杆倍数
         self.margin_type = 'CROSSED'  # 保证金模式 ISOLATED(逐仓), CROSSED(全仓)
         self.right_now_order = True  # 是否立即下首单
@@ -68,22 +71,22 @@ class Account(object):
         # 止盈类型 两种都支持 取最大值 percent(百分比) fixed(固定差额) 参考标准为仓位价格
         self.percent_stop_profit = 0.5  # 百分比止盈
         self.fixed_stop_profit = 0.01  # 固定差额止盈
-        self.open_stop_profit = False  # 是否开启止盈 False True
-        self.stop_profit_total = 1  # 止盈总金额
+        self.开启止盈 = True  # 是否开启止盈 False True
+        self.止盈总金额 = 1  # 止盈总金额
         # ==========================================止损参数设置===================================
         self.trust_sign = True  # 绝对信任指标 不管盈亏  False  True
-        self.open_stop_loss = False  # 是否打开止损 True(打开) False(关闭)
-        self.stop_loss_total = 50  # 亏损达到50u市价止损
+        self.开启止损 = True  # 是否打开止损 True(打开) False(关闭)
+        self.止损总金额 = 20  # 亏损达到50u市价止损
 
         # ==========================================补仓参数设置===================================
-        self.first_cover_num = 200  # 首次补仓数量
-        self.max_cover_num = 6  # 最大补仓次数
-        self.multiple_num_cover = 2  # 倍数补仓的倍数 如 倍数为2 第一次补仓10个 则后面依次是 20 40 80 160 320
+        self.首次补仓数量 = 100  # 首次补仓数量
+        self.最大补仓次数 = 3  # 最大补仓次数
+        self.补仓倍数 = 2  # 倍数补仓的倍数 如 倍数为2 第一次补仓10个 则后面依次是 20 40 80 160 320
         self.cover_price_type = 'percent'  # 补仓单价格叠加类型 支持 percent(这次补仓的价格必须高于上次的百分之多少) fixed(这次补仓的价格必须高于上次的多少)
-        self.price_gradient = 1.0  # 价格梯度 补仓单价格叠加类型*价格梯度
+        self.补仓价格倍数 = 1.0  # 价格梯度 补仓单价格叠加类型*价格梯度
         # 补仓单价格叠加类型=percent 时生效  固定下跌0.5% => 0  0.5  0.1  0.15  0.2
         #                               固定下跌0.5% 加了梯度3后 => 0  0.5  (0.5+0.5)*3=3  (3+0.5)*3 =10.5  (10.5+5)*3
-        self.percent_price_cover = 0.5  # 这次补仓的价格必须高于上次的百分之多少 如 设置1 第一次补仓价格为5 则后面依次是 5*(1+1%) (5*(1+1%))(1+1%)
+        self.补仓价格百分比例 = 0.5  # 这次补仓的价格必须高于上次的百分之多少 如 设置1 第一次补仓价格为5 则后面依次是 5*(1+1%) (5*(1+1%))(1+1%)
 
         # 补仓单价格叠加类型=fixed 时生效    固定下跌0.01 => 0  0.01  0.02  0.03  0.04  0.05
         #                               固定下跌0.01 加了梯度3后 => 0  0.01  (0.01+0.01)*3=0.06  (0.06+0.01)*3=2.1  (2.1+0.01)+3=6.33
