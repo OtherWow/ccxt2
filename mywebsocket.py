@@ -18,13 +18,15 @@ class PublicWebSocket:
         self.user_main.now_price = float(data['p'])
         self.user_hedge.now_price = float(data['p'])
         if self.user_main.position_side == 'SHORT':
-            if self.user_main.position_amt>0 and self.user_main.now_price > self.user_main.entery_price and self.user_hedge.position_amt == 0:
-                mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
-                mading.止盈止损单(self.user_hedge)
+            if self.user_main.position_amt>0 and self.user_main.now_price > self.user_main.entry_price and self.user_hedge.position_amt == 0:
+                if self.user_hedge.now_price > self.user_main.entry_price:
+                    mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
+                    mading.止盈止损单(self.user_hedge)
         if self.user_main.position_side == 'LONG':
-            if self.user_main.position_amt>0 and self.user_main.now_price < self.user_main.entery_price and self.user_hedge.position_amt == 0:
-                mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'SELL')
-                mading.止盈止损单(self.user_hedge)
+            if self.user_main.position_amt>0 and self.user_main.now_price < self.user_main.entry_price and self.user_hedge.position_amt == 0:
+                if self.user_hedge.now_price < self.user_main.entry_price:
+                    mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
+                    mading.止盈止损单(self.user_hedge)
 
     def on_ping(self, message):
         return

@@ -45,8 +45,8 @@ class Account(object):
             self.secret = 'ZW7rikzhuN6kXUcnR23bzpIor2GrLUVNFz4ln9AFLvDS1AgDJ5AhhHcgq3agb9qn'
         elif name == "yyn_big":
             self.name = "yyn_big"
-            self.api_key = 'WgDjyszZYXz21MDlrvZxtYgrPtdmIZkP81gdiAX4XmmomHU21Hk8kqLtwcT93yOY'
-            self.secret = 'PozIcU1yTTnMyGUe9Cq9VUKhKGg3yq5MK257RM8ghbM0va7U0RKNey9BFdLF5KQx'
+            self.api_key = 'NtgY0dBifINkKgzo3JCxsyQYTnGgVqWnaJvnmRAuTtVUcwMs951rgqx4RbIC6z1O'
+            self.secret = '0Ck4Q7LMoN9nR3Mt6pwjQxL8F4ru4omdGua4gwyMNHEPW5FOyRZFoqeHQMXhO6Nb'
         elif name == "yyn_small":
             self.name = "yyn_small"
             self.api_key = 'WgDjyszZYXz21MDlrvZxtYgrPtdmIZkP81gdiAX4XmmomHU21Hk8kqLtwcT93yOY'
@@ -69,15 +69,15 @@ class Account(object):
         self.need_sign = True  # 是否需要指标 False True
         # ==========================================止盈参数设置===================================
         # 止盈类型 两种都支持 取最大值 percent(百分比) fixed(固定差额) 参考标准为仓位价格
-        self.percent_stop_profit = 0.5  # 百分比止盈
-        self.fixed_stop_profit = 0.01  # 固定差额止盈
+        self.止盈类型 = 0  # 0 固定金额止盈  1 百分比止盈
         self.开启止盈 = True  # 是否开启止盈 False True
         self.止盈总金额 = 1  # 止盈总金额
+        self.止盈百分比 = 0.12  # 止盈百分比 相对于保证金
         # ==========================================止损参数设置===================================
-        self.trust_sign = True  # 绝对信任指标 不管盈亏  False  True
+        self.止损类型 = 0  # 0 固定金额止盈  1 百分比止盈
         self.开启止损 = True  # 是否打开止损 True(打开) False(关闭)
         self.止损总金额 = 20  # 亏损达到50u市价止损
-
+        self.止损百分比 = 0.12  # 止损百分比 相对于保证金
         # ==========================================补仓参数设置===================================
         self.首次补仓数量 = 100  # 首次补仓数量
         self.最大补仓次数 = 3  # 最大补仓次数
@@ -86,7 +86,7 @@ class Account(object):
         self.补仓价格倍数 = 1.0  # 价格梯度 补仓单价格叠加类型*价格梯度
         # 补仓单价格叠加类型=percent 时生效  固定下跌0.5% => 0  0.5  0.1  0.15  0.2
         #                               固定下跌0.5% 加了梯度3后 => 0  0.5  (0.5+0.5)*3=3  (3+0.5)*3 =10.5  (10.5+5)*3
-        self.补仓价格百分比例 = 0.5  # 这次补仓的价格必须高于上次的百分之多少 如 设置1 第一次补仓价格为5 则后面依次是 5*(1+1%) (5*(1+1%))(1+1%)
+        self.补仓价格百分比例 = 0.6  # 这次补仓的价格必须高于上次的百分之多少 如 设置1 第一次补仓价格为5 则后面依次是 5*(1+1%) (5*(1+1%))(1+1%)
 
         # 补仓单价格叠加类型=fixed 时生效    固定下跌0.01 => 0  0.01  0.02  0.03  0.04  0.05
         #                               固定下跌0.01 加了梯度3后 => 0  0.01  (0.01+0.01)*3=0.06  (0.06+0.01)*3=2.1  (2.1+0.01)+3=6.33
