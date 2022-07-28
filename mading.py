@@ -26,7 +26,6 @@ def 获取交易对规则(user):
     return user.exchange.fapiPublicGetExchangeInfo()
 
 
-
 def get_token(user_main, user_hedge):
     user_main.listen_key = user_main.exchange.fapiPrivatePostListenKey()['listenKey']
     user_hedge.listen_key = user_hedge.exchange.fapiPrivatePostListenKey()['listenKey']
@@ -47,15 +46,17 @@ def sign1(sign_data, user_main, user_hedge):
     # 对冲单开首单
     if sign_data['type'] == 'buy':
         if user_hedge.position_side == 'SHORT' and user_hedge.position_amt == 0:
+            撤销所有订单(user_hedge)
             市价单(user_hedge, user_main.首单数量 * 16, "SELL")
             查询账户持仓情况(user_hedge)
             user_hedge.首单价值 = user_hedge.position_amt * user_hedge.entry_price
             止盈止损单(user_hedge)
             查询账户持仓情况(user_hedge)
-            user_main.马丁触发价格 = user_hedge.entry_price*(1-0.002)
+            user_main.马丁触发价格 = user_hedge.entry_price * (1 - 0.002)
 
     elif sign_data['type'] == 'sell':
         if user_hedge.position_side == 'LONG' and user_hedge.position_amt == 0:
+            撤销所有订单(user_hedge)
             市价单(user_hedge, user_main.首单数量 * 16, "BUY")
             查询账户持仓情况(user_hedge)
             user_hedge.首单价值 = user_hedge.position_amt * user_hedge.entry_price
@@ -65,7 +66,9 @@ def sign1(sign_data, user_main, user_hedge):
 
     logger.info("收到信号" + str(sign_data['type']) + ",但是对冲单已持仓，忽略本次信号。对冲单持仓数量：" + str(user_hedge.position_amt))
 
+
 def 马丁开首单(user_main, user_hedge):
+    撤销所有订单(user_main)
     查询账户持仓情况(user_main)
     查询账户持仓情况(user_hedge)
     if user_main.position_amt == 0:
@@ -90,6 +93,7 @@ def 马丁开首单(user_main, user_hedge):
                 except Exception as e:
                     logger.error(user_main.name + "第{}次限价单下单出错 ".format(i + 1) + str(e))
                 num = num * user_main.补仓倍数
+
 
 def 开首单(user_main, user_hedge):
     user_hedge.首单数量 = 0.0
@@ -348,11 +352,11 @@ def 止盈止损单(user):
                 elif user.止损相对于首单:
                     # （当前价格 - 仓位价格 + 0.0006 * 当前价格）*仓位数量 / 首单价值 = 止损百分比
                     委托价 = ((user.止损百分比 / 100) * user.首单价值 / user.position_amt + user.entry_price) / (
-                                1 + user.限价手续费率 + user.市价手续费率)
+                            1 + user.限价手续费率 + user.市价手续费率)
                 else:
                     委托价 = ((user.止损百分比 / 100) * (
-                                user.position_amt * user.entry_price) / user.position_amt + user.entry_price) / (
-                                      1 + user.限价手续费率 + user.市价手续费率)
+                            user.position_amt * user.entry_price) / user.position_amt + user.entry_price) / (
+                                  1 + user.限价手续费率 + user.市价手续费率)
                 触发价 = (委托价 + user.now_price) / 2
             if user.position_side == 'LONG':
                 if user.止损类型 == 0:  # 0 固定金额止损 1 百分比止损
@@ -361,11 +365,11 @@ def 止盈止损单(user):
                 elif user.止损相对于首单:
                     # （仓位价格-当前价格+0.0006*当前价格）*仓位数量 / 首单价值 = 止损百分比
                     委托价 = (user.entry_price - (user.止损百分比 / 100) * user.首单价值 / user.position_amt) / (
-                                1 - user.限价手续费率 - user.市价手续费率)
+                            1 - user.限价手续费率 - user.市价手续费率)
                 else:
                     委托价 = (user.entry_price - (user.止损百分比 / 100) * (
-                                user.position_amt * user.entry_price) / user.position_amt) / (
-                                      1 - user.限价手续费率 - user.市价手续费率)
+                            user.position_amt * user.entry_price) / user.position_amt) / (
+                                  1 - user.限价手续费率 - user.市价手续费率)
                 触发价 = (委托价 + user.now_price) / 2
             try:
                 限价止损单(user, 触发价, 委托价)
@@ -385,9 +389,12 @@ def 止盈止损单(user):
                     委托价 = (user.entry_price - user.止盈总金额 / user.position_amt) / (1 + user.限价手续费率 + user.市价手续费率)
                 elif user.止盈相对于首单:
                     # （仓位价格-当前价格-0.0006*当前价格）*仓位数量 / 首单价值 = 止盈百分比
-                    委托价 = (user.entry_price - (user.止盈百分比/ 100) * user.首单价值 / user.position_amt) / (1 + user.限价手续费率 + user.市价手续费率)
+                    委托价 = (user.entry_price - (user.止盈百分比 / 100) * user.首单价值 / user.position_amt) / (
+                                1 + user.限价手续费率 + user.市价手续费率)
                 else:
-                    委托价 = (user.entry_price - (user.止盈百分比 / 100) * (user.position_amt * user.entry_price) / user.position_amt) / (1 + user.限价手续费率 + user.市价手续费率)
+                    委托价 = (user.entry_price - (user.止盈百分比 / 100) * (
+                                user.position_amt * user.entry_price) / user.position_amt) / (
+                                      1 + user.限价手续费率 + user.市价手续费率)
                 触发价 = (委托价 + user.now_price) / 2
             if user.position_side == 'LONG':
                 if user.止盈类型 == 0:  # 0 固定金额止盈  1 百分比止盈
@@ -395,9 +402,12 @@ def 止盈止损单(user):
                     委托价 = (user.止盈总金额 / user.position_amt + user.entry_price) / (1 - user.限价手续费率 - user.市价手续费率)
                 elif user.止盈相对于首单:
                     # （当前价格-仓位价格-0.0006*当前价格）*仓位数量 / 首单价值 = 止盈百分比
-                    委托价 = ((user.止盈百分比/ 100) * user.首单价值 / user.position_amt + user.entry_price) / (1 - user.限价手续费率 - user.市价手续费率)
+                    委托价 = ((user.止盈百分比 / 100) * user.首单价值 / user.position_amt + user.entry_price) / (
+                                1 - user.限价手续费率 - user.市价手续费率)
                 else:
-                    委托价 = ((user.止盈百分比 / 100) * (user.position_amt * user.entry_price) / user.position_amt + user.entry_price) / (1 - user.限价手续费率 - user.市价手续费率)
+                    委托价 = ((user.止盈百分比 / 100) * (
+                                user.position_amt * user.entry_price) / user.position_amt + user.entry_price) / (
+                                      1 - user.限价手续费率 - user.市价手续费率)
                 触发价 = (委托价 + user.now_price) / 2
             try:
                 限价止盈单(user, 触发价, 委托价)
@@ -430,3 +440,4 @@ def 批量撤销订单(user, order_book):
             'timestamp': get_timestamp()
         })
         logger.debug("idsString:" + str(idsString))
+

@@ -2,7 +2,8 @@ import websocket
 import json
 from loguru import logger
 import threading
-
+from urllib.parse import unquote
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import mading
 
 
@@ -19,14 +20,14 @@ class PublicWebSocket:
         self.user_hedge.now_price = float(data['p'])
         if self.user_main.position_side == 'SHORT':
             if self.user_main.now_price >= self.user_main.马丁触发价格:
-                mading.马丁开首单(self.user_main,self.user_hedge)
+                mading.马丁开首单(self.user_main, self.user_hedge)
             # if self.user_main.position_amt>0 and self.user_main.now_price > self.user_main.entry_price and self.user_hedge.position_amt == 0:
             #     if self.user_hedge.now_price > self.user_main.entry_price:
             #         mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
             #         mading.止盈止损单(self.user_hedge)
         if self.user_main.position_side == 'LONG':
             if self.user_main.now_price <= self.user_main.马丁触发价格:
-                mading.马丁开首单(self.user_main,self.user_hedge)
+                mading.马丁开首单(self.user_main, self.user_hedge)
             # if self.user_main.position_amt>0 and self.user_main.now_price < self.user_main.entry_price and self.user_hedge.position_amt == 0:
             #     if self.user_hedge.now_price < self.user_main.entry_price:
             #         mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
@@ -76,13 +77,12 @@ class PrivateWebSocket:
                 if temp['s'] == self.user_main.symbol:
                     pa = abs(float(temp['pa']))
                     if pa == 0:
-                        logger.info(self.user_main.name + "账户仓位变更为0,触发开新单")
-                        mading.trade_task(self.user_main, self.user_hedge)
+                        logger.info(self.user_main.name + "账户仓位变更为0,对冲单开始平仓")
+                        mading.市价平仓(self.user_hedge)
                     return
         if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':
             mading.止盈止损单(self.user_main)
             return
-
 
     def ws2_message(self, ws, message):
         data = json.loads(message)
@@ -91,12 +91,45 @@ class PrivateWebSocket:
                 if temp['s'] == self.user_hedge.symbol:
                     pa = abs(float(temp['pa']))
                     if pa == 0:
-                        logger.info(self.user_hedge.name + "账户仓位变更为0,触发开新单")
-                        mading.trade_task(self.user_main, self.user_hedge)
+                        logger.info(self.user_hedge.name + "账户仓位变更为0")
                     return
 
     def on_ping(self, message):
         return
+
+
+user1 = None
+user2 = None
+
+
+class Webhooks:
+    def __init__(self, user_main, user_hedge):
+        self.user_main = user_main
+        self.user_hedge = user_hedge
+        user1 = user_main
+        user2 = user_hedge
+
+    def init_webhooks(self):
+        addr = ('', self.user_main.port)
+        server = HTTPServer(addr, RequestHandler)
+        server.serve_forever()
+
+    def run(self):
+        threading.Thread(target=self.init_webhooks).start()
+
+
+class RequestHandler(BaseHTTPRequestHandler):
+
+    def do_POST(self):
+        data = self.rfile.read(int(self.headers['content-length']))
+        data = unquote(str(data, encoding='utf-8'))
+        # print("转化前data:" + data)
+        data = json.dumps(eval(data))
+        # print("转化后data:" + data)
+        json_obj = json.loads(data)
+        if user1.now_timestamp != json_obj['timestamp']:
+            user1.now_timestamp = json_obj['timestamp']
+            mading.sign1(json_obj, user1, user2)
 
 
 if __name__ == '__main__':
