@@ -19,14 +19,14 @@ class PublicWebSocket:
         self.user_main.now_price = float(data['p'])
         self.user_hedge.now_price = float(data['p'])
         if self.user_main.position_side == 'SHORT':
-            if self.user_main.now_price >= self.user_main.马丁触发价格:
+            if self.user_main.now_price >= self.user_main.马丁触发价格 != 0:
                 mading.马丁开首单(self.user_main, self.user_hedge)
             # if self.user_main.position_amt>0 and self.user_main.now_price > self.user_main.entry_price and self.user_hedge.position_amt == 0:
             #     if self.user_hedge.now_price > self.user_main.entry_price:
             #         mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
             #         mading.止盈止损单(self.user_hedge)
         if self.user_main.position_side == 'LONG':
-            if self.user_main.now_price <= self.user_main.马丁触发价格:
+            if self.user_main.now_price <= self.user_main.马丁触发价格 != 0:
                 mading.马丁开首单(self.user_main, self.user_hedge)
             # if self.user_main.position_amt>0 and self.user_main.now_price < self.user_main.entry_price and self.user_hedge.position_amt == 0:
             #     if self.user_hedge.now_price < self.user_main.entry_price:
@@ -78,7 +78,11 @@ class PrivateWebSocket:
                     pa = abs(float(temp['pa']))
                     if pa == 0:
                         logger.info(self.user_main.name + "账户仓位变更为0,对冲单开始平仓")
-                        mading.市价平仓(self.user_hedge)
+                        mading.撤销所有订单(self.user_hedge)
+                        mading.撤销所有订单(self.user_main)
+                        mading.查询账户持仓情况(self.user_hedge)
+                        if self.user_hedge.position_amt > 0:
+                            mading.市价平仓(self.user_hedge)
                     return
         if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':
             mading.止盈止损单(self.user_main)
@@ -93,6 +97,12 @@ class PrivateWebSocket:
                     if pa == 0:
                         logger.info(self.user_hedge.name + "账户仓位变更为0")
                     return
+        if data['e'] == 'ORDER_TRADE_UPDATE':
+            if data['o']['x'] == 'EXPIRED' and data['o']['o'] == 'STOP_MARKET':
+                logger.info("已止损平仓")
+
+            if data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and data['o']['S'] == 'BUY':
+                logger.info("已限价止损平仓")
 
     def on_ping(self, message):
         return
