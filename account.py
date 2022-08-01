@@ -56,15 +56,24 @@ class Account(object):
             self.api_key = 'WgDjyszZYXz21MDlrvZxtYgrPtdmIZkP81gdiAX4XmmomHU21Hk8kqLtwcT93yOY'
             self.secret = 'PozIcU1yTTnMyGUe9Cq9VUKhKGg3yq5MK257RM8ghbM0va7U0RKNey9BFdLF5KQx'
         # ==========================================交易对相关参数设置===================================
-        self.symbol = 'LUNA2BUSD'  # 交易对  LUNA2BUSD   ETHUSDT
-        self.websocket_symbol = 'luna2busd'  # 交易对  luna2busd   ethusdt
-        self.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
-        self.市价手续费率 = 0.0003  # 手续费率
-        self.限价手续费率 = 0.00012  # 手续费率
+        self.symbol = 'ETHUSDT'  # 交易对  LUNA2BUSD   ETHUSDT
+        self.websocket_symbol = 'ethusdt'  # 交易对  luna2busd   ethusdt
+        self.trade_currency = 'USDT'  # 交易货币  USDT  BUSD
+        self.不算手续费 = True  # 是否需要手续费
+        if self.不算手续费:
+            self.市价手续费率 = 0.0  # 手续费率 0.0003 0.0004
+            self.限价手续费率 = 0.0  # 手续费率 0.00012 0.0002
+        elif self.trade_currency == 'BUSD':
+            self.市价手续费率 = 0.0003  # 手续费率 0.0003 0.0004
+            self.限价手续费率 = 0.00012  # 手续费率 0.00012 0.0002
+        elif self.trade_currency == 'USDT':
+            self.市价手续费率 = 0.0004  # 手续费率 0.0003 0.0004
+            self.限价手续费率 = 0.0002  # 手续费率 0.00012 0.0002
+
         self.交易对价格精度 = 4  # 交易对价格精度
         self.交易对数量精度 = 0  # 交易对价格精度
         self.position_side = 'SHORT'  # 持仓方向 可选参数 SHORT(做空) LONG(做多)
-        self.首单数量 = 50  # 首单数量
+        self.首单数量 = 0.012  # 首单数量
         self.first_order_type = 'LIMIT'  # 首单挂单类型 支持 MARKET(市价单) LIMIT(限价单)
         self.leverage = 20.0  # 杠杆倍数
         self.margin_type = 'CROSSED'  # 保证金模式 ISOLATED(逐仓), CROSSED(全仓)
@@ -73,22 +82,22 @@ class Account(object):
         self.need_sign = True  # 是否需要指标 False True
         # ==========================================止盈参数设置===================================
         # 止盈类型 两种都支持 取最大值 percent(百分比) fixed(固定差额) 参考标准为仓位价格
-        self.止盈类型 = 0  # 0 固定金额止盈  1 百分比止盈
+        self.止盈类型 = 1  # 0 固定金额止盈  1 百分比止盈
         self.开启止盈 = True  # 是否开启止盈 False True
         self.止盈相对于首单 = False
         self.止盈总金额 = 1  # 止盈总金额
         self.止盈百分比 = 0.4  # 止盈百分比 相对于保证金
         self.首单止盈百分比 = 0.1  # 首单止盈百分比 相对于保证金
         # ==========================================止损参数设置===================================
-        self.止损类型 = 0  # 0 固定金额止盈  1 百分比止盈
+        self.止损类型 = 1  # 0 固定金额止盈  1 百分比止盈
         self.开启止损 = True  # 是否打开止损 True(打开) False(关闭)
         self.止损相对于首单 = True
         self.止损总金额 = 20  # 亏损达到50u市价止损
-        self.止损百分比 = 105.4  # 止损百分比 相对于保证金
-        self.首单止损百分比 = 105.4
+        self.止损百分比 = 5.4  # 止损百分比 相对于保证金
+        self.首单止损百分比 = 5.4
         # ==========================================补仓参数设置===================================
-        self.首次补仓数量 = 100  # 首次补仓数量
-        self.最大补仓次数 = 3  # 最大补仓次数
+        self.首次补仓数量 = 0.012  # 首次补仓数量
+        self.最大补仓次数 = 6  # 最大补仓次数
         self.补仓倍数 = 2  # 倍数补仓的倍数 如 倍数为2 第一次补仓10个 则后面依次是 20 40 80 160 320
         self.cover_price_type = 'percent'  # 补仓单价格叠加类型 支持 percent(这次补仓的价格必须高于上次的百分之多少) fixed(这次补仓的价格必须高于上次的多少)
         self.补仓价格倍数 = 1.0  # 价格梯度 补仓单价格叠加类型*价格梯度

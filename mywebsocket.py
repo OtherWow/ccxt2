@@ -96,6 +96,7 @@ class PrivateWebSocket:
                     pa = abs(float(temp['pa']))
                     if pa == 0:
                         logger.info(self.user_hedge.name + "账户仓位变更为0")
+                        mading.撤销所有订单(self.user_hedge)
                     return
         if data['e'] == 'ORDER_TRADE_UPDATE':
             if data['o']['x'] == 'EXPIRED' and data['o']['o'] == 'STOP_MARKET':
@@ -108,16 +109,17 @@ class PrivateWebSocket:
         return
 
 
-user1 = None
-user2 = None
+
 
 
 class Webhooks:
+    user1 = None
+    user2 = None
     def __init__(self, user_main, user_hedge):
         self.user_main = user_main
         self.user_hedge = user_hedge
-        user1 = user_main
-        user2 = user_hedge
+        Webhooks.user1 = user_main
+        Webhooks.user2 = user_hedge
 
     def init_webhooks(self):
         addr = ('', self.user_main.port)
@@ -137,9 +139,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         data = json.dumps(eval(data))
         # print("转化后data:" + data)
         json_obj = json.loads(data)
-        if user1.now_timestamp != json_obj['timestamp']:
-            user1.now_timestamp = json_obj['timestamp']
-            mading.sign1(json_obj, user1, user2)
+        if Webhooks.user1.now_timestamp != json_obj['timestamp']:
+            Webhooks.user1.now_timestamp = json_obj['timestamp']
+            mading.sign1(json_obj, Webhooks.user1, Webhooks.user2)
 
 
 if __name__ == '__main__':

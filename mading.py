@@ -50,7 +50,7 @@ def get_token(user_main, user_hedge):
     user_hedge.listen_key = user_hedge.exchange.fapiPrivatePostListenKey()['listenKey']
     logger.debug("定时器获得use1-listenKey:" + user_main.listen_key)
     logger.debug("定时器获得use2-listenKey:" + user_hedge.listen_key)
-    threading.Timer(60 * 59, get_token).start()
+    threading.Timer(60 * 59, get_token,args={user_main, user_hedge}).start()
 
 
 def get_timestamp():
@@ -66,7 +66,7 @@ def sign1(sign_data, user_main, user_hedge):
         logger.debug("主账户持仓，对冲单不开仓")
         return
     # 对冲单开首单
-    if sign_data['type'] == 'buy':
+    if sign_data['type'] == 'sell':
         if user_hedge.position_side == 'SHORT' and user_hedge.position_amt == 0:
             撤销所有订单(user_hedge)
             市价单(user_hedge, user_main.首单数量 * 16, "SELL")
@@ -75,8 +75,9 @@ def sign1(sign_data, user_main, user_hedge):
             止盈止损单(user_hedge)
             查询账户持仓情况(user_hedge)
             user_main.马丁触发价格 = user_hedge.entry_price * (1 - 0.002)
+            return
 
-    elif sign_data['type'] == 'sell':
+    elif sign_data['type'] == 'buy':
         if user_hedge.position_side == 'LONG' and user_hedge.position_amt == 0:
             撤销所有订单(user_hedge)
             市价单(user_hedge, user_main.首单数量 * 16, "BUY")
@@ -85,6 +86,7 @@ def sign1(sign_data, user_main, user_hedge):
             止盈止损单(user_hedge)
             查询账户持仓情况(user_hedge)
             user_main.马丁触发价格 = user_hedge.entry_price * (1 + 0.002)
+            return
 
     logger.info("收到信号" + str(sign_data['type']) + ",但是对冲单已持仓，忽略本次信号。对冲单持仓数量：" + str(
         user_hedge.position_amt) + " 对冲单持仓价格：" + str(user_hedge.entry_price) + " 当前价格：" + str(user_hedge.now_price))
@@ -93,6 +95,9 @@ def sign1(sign_data, user_main, user_hedge):
 def 马丁开首单(user_main, user_hedge):
     查询账户持仓情况(user_main)
     查询账户持仓情况(user_hedge)
+    if user_main.position_amt == 0 and user_hedge.position_amt == 0:
+        user_main.马丁触发价格 = 0
+        return
     if user_main.position_amt == 0 and user_hedge.position_amt > 0:
         user_main.马丁触发价格 = 0
         撤销所有订单(user_main)

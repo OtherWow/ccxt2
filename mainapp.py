@@ -10,10 +10,10 @@ if __name__ == '__main__':
     trace = logger.add("log/log.log", level="INFO", rotation="00:00")  # 每天0点创建新文件
     user_main = Account("yyn_big")
     user_hedge = Account("yyn_small")
-    user_hedge.止盈百分比 = 105.4
+    user_hedge.止盈百分比 = 5.4
     user_hedge.止损百分比 = 0.15
     user_hedge.首单止损百分比 = 0.15
-    user_hedge.首单止盈百分比 = 105.4
+    user_hedge.首单止盈百分比 = 5.4
     user_hedge.止盈相当于首单 = True
     user_hedge.止损相当于首单 = True
     if user_main.position_side == 'SHORT':
