@@ -86,6 +86,9 @@ class PrivateWebSocket:
                     return
         if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':
             mading.止盈止损单(self.user_main)
+            mading.查询账户持仓情况(self.user_hedge)
+            if self.user_hedge.position_amt > 0:
+                mading.限价止盈单(self.user_hedge,self.user_main.对冲单平仓触发价,self.user_main.对冲单平仓委托价)
             return
 
     def ws2_message(self, ws, message):

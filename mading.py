@@ -107,6 +107,8 @@ def 马丁开首单(user_main, user_hedge):
         查询账户持仓情况(user_main)
         user_main.首单价值 = user_main.position_amt * user_main.entry_price
         止盈止损单(user_main)
+        查询账户持仓情况(user_hedge)
+        限价止盈单(user_hedge, user_main.对冲单平仓触发价, user_main.对冲单平仓委托价)
         查询账户持仓情况(user_main)
         # 开始循环下限价单
         if user_main.position_side == 'SHORT':
@@ -423,6 +425,8 @@ def 止盈止损单(user):
                 触发价 = (委托价 + user.now_price) / 2
             try:
                 限价止损单(user, 触发价, 委托价)
+                user.对冲单平仓委托价= 委托价
+                user.对冲单平仓触发价= 触发价
             except Exception as e:
                 logger.info(user.name + "限价止损单发送失败！下市价止损单！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
                     user.now_price) + " 首单价值：" + str(user.首单价值) + str(e))
