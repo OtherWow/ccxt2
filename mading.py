@@ -50,7 +50,7 @@ def get_token(user_main, user_hedge):
     user_hedge.listen_key = user_hedge.exchange.fapiPrivatePostListenKey()['listenKey']
     logger.debug("定时器获得use1-listenKey:" + user_main.listen_key)
     logger.debug("定时器获得use2-listenKey:" + user_hedge.listen_key)
-    threading.Timer(60 * 59, get_token,args={user_main, user_hedge}).start()
+    threading.Timer(60 * 59, get_token, args={user_main, user_hedge}).start()
 
 
 def get_timestamp():
@@ -62,42 +62,40 @@ def sign1(sign_data, user_main, user_hedge):
     # 根据信号开仓
     查询账户持仓情况(user_main)
     查询账户持仓情况(user_hedge)
-    if user_main.position_amt>0:
-        logger.debug("主账户持仓，对冲单不开仓")
+    if user_main.position_amt > 0 or user_hedge.position_amt > 0:
+        logger.info("收到信号" + str(sign_data['type']) + ",但是主账户已持仓" + str(user_main.position_amt) + " 或 对冲单已持仓" + str(
+            user_hedge.position_amt) + "，忽略本次信号。对冲单持仓数量：" + str(
+            user_hedge.position_amt) + " 对冲单持仓价格：" + str(user_hedge.entry_price) + " 当前价格：" + str(user_hedge.now_price))
         return
     # 对冲单开首单
     if sign_data['type'] == 'sell':
-        if user_hedge.position_side == 'SHORT' and user_hedge.position_amt == 0:
-            撤销所有订单(user_hedge)
-            市价单(user_hedge, user_main.首单数量 * 16, "SELL")
-            查询账户持仓情况(user_hedge)
-            user_hedge.首单价值 = user_hedge.position_amt * user_hedge.entry_price
-            止盈止损单(user_hedge)
-            查询账户持仓情况(user_hedge)
-            user_main.马丁触发价格 = user_hedge.entry_price * (1 - 0.002)
-            return
+        user_hedge.position_side = 'SHORT'
+        user_main.position_side = 'LONG'
+        撤销所有订单(user_hedge)
+        市价单(user_hedge, user_main.首单数量 * 16, "SELL")
+        time.sleep(2)
+        查询账户持仓情况(user_hedge)
+        user_hedge.首单价值 = user_hedge.position_amt * user_hedge.entry_price
+        user_main.马丁触发价格 = user_hedge.entry_price * (1 - 0.002)
+        止盈止损单(user_hedge)
+        return
 
     elif sign_data['type'] == 'buy':
-        if user_hedge.position_side == 'LONG' and user_hedge.position_amt == 0:
-            撤销所有订单(user_hedge)
-            市价单(user_hedge, user_main.首单数量 * 16, "BUY")
-            查询账户持仓情况(user_hedge)
-            user_hedge.首单价值 = user_hedge.position_amt * user_hedge.entry_price
-            止盈止损单(user_hedge)
-            查询账户持仓情况(user_hedge)
-            user_main.马丁触发价格 = user_hedge.entry_price * (1 + 0.002)
-            return
-
-    logger.info("收到信号" + str(sign_data['type']) + ",但是对冲单已持仓，忽略本次信号。对冲单持仓数量：" + str(
-        user_hedge.position_amt) + " 对冲单持仓价格：" + str(user_hedge.entry_price) + " 当前价格：" + str(user_hedge.now_price))
+        user_hedge.position_side = 'LONG'
+        user_main.position_side = 'SHORT'
+        撤销所有订单(user_hedge)
+        市价单(user_hedge, user_main.首单数量 * 16, "BUY")
+        time.sleep(2)
+        查询账户持仓情况(user_hedge)
+        user_hedge.首单价值 = user_hedge.position_amt * user_hedge.entry_price
+        user_main.马丁触发价格 = user_hedge.entry_price * (1 + 0.002)
+        止盈止损单(user_hedge)
+        return
 
 
 def 马丁开首单(user_main, user_hedge):
     查询账户持仓情况(user_main)
     查询账户持仓情况(user_hedge)
-    if user_main.position_amt == 0 and user_hedge.position_amt == 0:
-        user_main.马丁触发价格 = 0
-        return
     if user_main.position_amt == 0 and user_hedge.position_amt > 0:
         user_main.马丁触发价格 = 0
         撤销所有订单(user_main)
@@ -105,6 +103,7 @@ def 马丁开首单(user_main, user_hedge):
             市价单(user_main, user_main.首单数量, 'SELL')
         if user_main.position_side == 'LONG':
             市价单(user_main, user_main.首单数量, 'BUY')
+        time.sleep(2)
         查询账户持仓情况(user_main)
         user_main.首单价值 = user_main.position_amt * user_main.entry_price
         止盈止损单(user_main)
@@ -113,15 +112,32 @@ def 马丁开首单(user_main, user_hedge):
         if user_main.position_side == 'SHORT':
             num = user_main.首次补仓数量
             last_percent = 0
-            price = 0
             for i in range(user_main.最大补仓次数):
                 last_percent = user_main.补仓价格百分比例 / 100 + last_percent * user_main.补仓价格倍数
                 price = user_main.entry_price * (1 + last_percent)
                 try:
                     限价单(user_main, num, price, 'SELL')
                 except Exception as e:
-                    logger.error(user_main.name + "第{}次限价单下单出错 ".format(i + 1) + str(e))
+                    logger.error(
+                        user_main.name + "第{}次限价单下单出错 ".format(i + 1) + str(e) + " 价格：" + str(price) + " 数量：" + str(
+                            num))
                 num = num * user_main.补仓倍数
+        if user_main.position_side == 'LONG':
+            num = user_main.首次补仓数量
+            last_percent = 0
+            for i in range(user_main.最大补仓次数):
+                last_percent = user_main.补仓价格百分比例 / 100 + last_percent * user_main.补仓价格倍数
+                price = user_main.entry_price * (1 - last_percent)
+                try:
+                    限价单(user_main, num, price, 'BUY')
+                except Exception as e:
+                    logger.error(
+                        user_main.name + "第{}次限价单下单出错 ".format(i + 1) + str(e) + " 价格：" + str(price) + " 数量：" + str(
+                            num))
+                num = num * user_main.补仓倍数
+    else:
+        user_main.马丁触发价格 = 0
+        return
 
 
 def 开首单(user_main, user_hedge):
@@ -202,7 +218,7 @@ def 查询账户持仓情况(user):
     for temp in account_info['assets']:
         if user.trade_currency in temp['asset']:
             user.wallet_balance = float(temp['walletBalance'])
-            logger.debug("账户余额: " + str(user.wallet_balance) + " " + user.trade_currency)
+            logger.debug(user.name + " 账户余额: " + str(user.wallet_balance) + " " + user.trade_currency)
             break
     for temp in account_info['positions']:
         if user.symbol in temp['symbol']:
@@ -214,7 +230,7 @@ def 查询账户持仓情况(user):
                 user.cover_statistics = 0
             elif user.cover_statistics == 0:
                 user.cover_statistics = 1
-            logger.debug("账户【" + user.symbol + "】持仓情况=> 仓位数量：" + str(
+            logger.debug(user.name + " 账户【" + user.symbol + "】持仓情况=> 仓位数量：" + str(
                 user.real_position_amt) + " " + user.symbol + " 仓位价格:" + str(
                 user.entry_price) + " " + user.trade_currency + " 当前所需起始保证金:" + str(
                 user.initial_margin) + " " + user.trade_currency)
@@ -227,7 +243,7 @@ def 查询当前所有挂单(user):
         'symbol': user.symbol,
         'timestamp': get_timestamp(),
     })
-    logger.debug("查询当前所有挂单=>" + str(order_info))
+    logger.debug(user.name + "查询当前所有挂单=>" + str(order_info))
 
 
 def 市价平仓(user):
@@ -409,10 +425,10 @@ def 止盈止损单(user):
                 限价止损单(user, 触发价, 委托价)
             except Exception as e:
                 logger.info(user.name + "限价止损单发送失败！下市价止损单！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
-                    user.now_price) + str(e))
+                    user.now_price) + " 首单价值：" + str(user.首单价值) + str(e))
                 市价止损单(user, 委托价)
             user.止盈止损订单簿.append(user.order_info['orderId'])
-            user.止损单号=user.order_info['orderId']
+            user.止损单号 = user.order_info['orderId']
             logger.info(user.name + "下单标记止损单,止损价格：{:.4f}".format(委托价) + " 预估损失：" + str(
                 user.止损总金额) + " 当前仓位价格： {:.4f}".format(
                 user.entry_price) + " 当前仓位数量：{:.4f}".format(user.position_amt))
@@ -453,7 +469,7 @@ def 止盈止损单(user):
                 限价止盈单(user, 触发价, 委托价)
             except Exception as e:
                 logger.info(user.name + "限价止盈单发送失败！下市价止盈单！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
-                    user.now_price) + str(e))
+                    user.now_price)+ " 首单价值：" + str(user.首单价值)  + str(e))
                 市价止盈单(user, 委托价)
             user.止盈止损订单簿.append(user.order_info['orderId'])
             user.止盈单号 = user.order_info['orderId']
@@ -468,6 +484,8 @@ def 撤销所有订单(user):
         'symbol': user.symbol,
         'timestamp': get_timestamp()
     })
+    user.止盈止损订单簿= []
+    user.限价单订单簿 = []
     logger.debug(user.name + "撤销所有订单成功！")
 
 

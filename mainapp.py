@@ -7,12 +7,13 @@ from account import Account
 from mywebsocket import PublicWebSocket, PrivateWebSocket,Webhooks
 
 if __name__ == '__main__':
-    trace = logger.add("log/log.log", level="INFO", rotation="00:00")  # 每天0点创建新文件
+    trace = logger.add("log/log.log", rotation="00:00")  # 每天0点创建新文件
+    trace2 = logger.add("log/info.log", level="INFO", rotation="00:00")  # 每天0点创建新文件
     user_main = Account("yyn_big")
     user_hedge = Account("yyn_small")
     user_hedge.止盈百分比 = 5.4
-    user_hedge.止损百分比 = 0.15
-    user_hedge.首单止损百分比 = 0.15
+    user_hedge.止损百分比 = 0.3
+    user_hedge.首单止损百分比 = 0.3
     user_hedge.首单止盈百分比 = 5.4
     user_hedge.止盈相当于首单 = True
     user_hedge.止损相当于首单 = True
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     #     trade(data)
     # if d.need_sign:
     #     threading.Thread(target=init_webhooks()).start()  # 创建线程
-    # mading.查询账户持仓情况(user_main)
+    # mading.查询账户持仓情况(user_hedge)
     # mading.查询当前所有挂单(user_main)
     # mading.市价单(user_main,3,"SELL")
     # mading.限价单(user_main,6,1,"BUY")
@@ -64,5 +65,5 @@ if __name__ == '__main__':
     # mading.市价平仓(user_main)
     # mading.撤销所有订单(user_main)
     # mading.批量撤销订单(user_main,user_main.限价单订单簿)
-    mading.查询当前所有挂单(user_main)
+    # mading.查询当前所有挂单(user_hedge)
     #[1212212129]
