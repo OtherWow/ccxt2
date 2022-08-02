@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # user_main.限价单订单簿.append(1212539550)
     # user_main.限价单订单簿.append(1212545933)
     # logger.debug("限价单订单簿: {}".format(user_main.限价单订单簿))
-    # mading.市价平仓(user_main)
+    mading.市价平仓(user_hedge)
     # mading.撤销所有订单(user_main)
     # mading.批量撤销订单(user_main,user_main.限价单订单簿)
     # mading.查询当前所有挂单(user_hedge)
