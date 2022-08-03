@@ -11,10 +11,12 @@ if __name__ == '__main__':
     trace2 = logger.add("log/info.log", level="INFO", rotation="00:00")  # 每天0点创建新文件
     user_main = Account("yyn_big")
     user_hedge = Account("yyn_small")
-    user_hedge.止盈百分比 = 5.4
-    user_hedge.止损百分比 = 0.3
-    user_hedge.首单止损百分比 = 0.3
-    user_hedge.首单止盈百分比 = 5.4
+    user_hedge.首单数量 = user_main.首次补仓数量*60
+    user_hedge.对冲单价格变动百分比触发马丁 = 0.005
+    user_hedge.止盈百分比 = 1.0325
+    user_hedge.止损百分比 = 0.5
+    user_hedge.首单止损百分比 = 0.5
+    user_hedge.首单止盈百分比 = 1.0325
     user_hedge.止盈相当于首单 = True
     user_hedge.止损相当于首单 = True
     if user_main.position_side == 'SHORT':
@@ -38,32 +40,23 @@ if __name__ == '__main__':
         webhook = Webhooks(user_main, user_hedge)
         webhook.run()
 
-    # mading.trade_task(user_main, user_hedge)
-    # if d.right_now_order:
-    #     撤销所有订单()
-    #     time.sleep(5)
-    #     data = {
-    #         "type": "sell",
-    #         "timestamp": 431115,
-    #     }
-    #     trade(data)
-    # if d.need_sign:
-    #     threading.Thread(target=init_webhooks()).start()  # 创建线程
+    # time.sleep(2)
     # mading.查询账户持仓情况(user_hedge)
-    # mading.查询当前所有挂单(user_main)
-    # mading.市价单(user_main,3,"SELL")
-    # mading.限价单(user_main,6,1,"BUY")
-    # mading.限价单(user_main,6,10,"BUY")
-    # mading.限价单(user_main,3,21,"SELL")
-    # mading.限价单(user_main,3,2.2,"SELL")
-
-    # user_main.限价单订单簿.append(1212539485)
-    # user_main.限价单订单簿.append(1212539526)
-    # user_main.限价单订单簿.append(1212539550)
-    # user_main.限价单订单簿.append(1212545933)
-    # logger.debug("限价单订单簿: {}".format(user_main.限价单订单簿))
-    mading.市价平仓(user_hedge)
-    # mading.撤销所有订单(user_main)
-    # mading.批量撤销订单(user_main,user_main.限价单订单簿)
     # mading.查询当前所有挂单(user_hedge)
-    #[1212212129]
+    # mading.查询账户持仓情况(user_main)
+    # mading.查询当前所有挂单(user_main)
+    #
+    # mading.市价平仓(user_hedge)
+    # mading.市价平仓(user_main)
+    # mading.撤销所有订单(user_hedge)
+    # mading.撤销所有订单(user_main)
+    # user_hedge.止盈止损订单簿.append('8389765533504603620')
+    # user_hedge.止盈止损订单簿.append('8389765533504604462')
+
+    # mading.止盈止损单(user_hedge)
+    # mading.批量撤销订单(user_hedge,user_hedge.止盈止损订单簿)
+    # logger.info(user_hedge.止盈止损订单簿)
+    # mading.查询账户持仓情况(user_hedge)
+    # mading.查询当前所有挂单(user_hedge)
+    # mading.查询账户持仓情况(user_main)
+    # mading.查询当前所有挂单(user_main)
