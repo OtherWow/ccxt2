@@ -228,6 +228,7 @@ def trade_task(user_main, user_hedge):
         return
 
 
+@logger.catch()
 def 查询账户持仓情况(user):
     # =============================查询账户持仓情况==================================
     account_info = user.exchange.fapiPrivateV2GetAccount({"timestamp": get_timestamp()})
@@ -254,6 +255,7 @@ def 查询账户持仓情况(user):
             break
 
 
+@logger.catch()
 def 查询当前所有挂单(user):
     order_info = user.exchange.fapiPrivateGetOpenOrders({
         'symbol': user.symbol,
@@ -262,6 +264,7 @@ def 查询当前所有挂单(user):
     logger.debug(user.name + "查询当前所有挂单=>" + str(order_info))
 
 
+@logger.catch()
 def 市价平仓(user):
     if user.real_position_amt > 0:
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -281,6 +284,7 @@ def 市价平仓(user):
     logger.info(user.name + "市价平仓成功！平仓数量：{:6f}".format(user.position_amt) + " 市价单价格：{:.6f}".format(user.now_price))
 
 
+@logger.catch()
 def 市价单(user, num, side):
     user.order_info = user.exchange.fapiPrivatePostOrder({
         'symbol': user.symbol,
@@ -297,6 +301,7 @@ def 市价单(user, num, side):
     logger.info(user.name + "市价单下单成功！市价单数量：{:6f}".format(num) + " 市价单价格：{:.6f}".format(user.now_price) + "方向：" + 方向)
 
 
+@logger.catch()
 def 限价单(user, num, price, side):
     user.order_info = user.exchange.fapiPrivatePostOrder({
         'symbol': user.symbol,
@@ -317,6 +322,7 @@ def 限价单(user, num, price, side):
             user.now_price))
 
 
+@logger.catch()
 def 限价止损单(user, 触发价, 委托价):
     if user.position_side == 'SHORT':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -344,6 +350,7 @@ def 限价止损单(user, 触发价, 委托价):
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
+@logger.catch()
 def 市价止损单(user, 委托价):
     if user.position_side == 'SHORT':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -369,6 +376,7 @@ def 市价止损单(user, 委托价):
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
+@logger.catch()
 def 限价止盈单(user, 触发价, 委托价):
     if user.position_side == 'SHORT':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -396,6 +404,7 @@ def 限价止盈单(user, 触发价, 委托价):
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
+@logger.catch()
 def 市价止盈单(user, 委托价):
     if user.position_side == 'SHORT':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -421,6 +430,7 @@ def 市价止盈单(user, 委托价):
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
+@logger.catch()
 def 止盈止损单(user):
     查询账户持仓情况(user)
     try:
@@ -498,6 +508,7 @@ def 止盈止损单(user):
                     user.entry_price) + " 当前仓位数量：{:.4f}".format(user.position_amt))
 
 
+@logger.catch()
 def 撤销所有订单(user):
     user.exchange.fapiPrivate_delete_allopenorders({
         'symbol': user.symbol,
@@ -508,6 +519,7 @@ def 撤销所有订单(user):
     logger.debug(user.name + "撤销所有订单成功！")
 
 
+@logger.catch()
 def 批量撤销订单(user, order_book):
     if len(order_book) > 0:
         idsString = dumps(order_book).replace(" ", "")

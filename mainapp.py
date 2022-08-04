@@ -11,8 +11,8 @@ if __name__ == '__main__':
     trace2 = logger.add("log/info.log", level="INFO", rotation="00:00")  # 每天0点创建新文件
     user_main = Account("yyn_big")
     user_hedge = Account("yyn_small")
-    user_hedge.首单数量 = user_main.首次补仓数量*60
-    user_hedge.对冲单价格变动百分比触发马丁 = 0.005
+    user_hedge.首单数量 = user_main.首次补仓数量*40
+    user_hedge.对冲单价格变动百分比触发马丁 = 0.004
     user_hedge.止盈百分比 = 1.0325
     user_hedge.止损百分比 = 0.5
     user_hedge.首单止损百分比 = 0.5
