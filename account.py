@@ -43,6 +43,8 @@ class Account(object):
         self.交易对价格精度 = 4  # 交易对价格精度
         self.交易对数量精度 = 0  # 交易对价格精度
         self.对冲单开单交易簿=[]
+        self.马丁补单单号字典={}
+        self.马丁补单当前索引=0
         # 自定义参数
         # ==========================================apiKey=========================================
         if name == "cx":
@@ -78,7 +80,7 @@ class Account(object):
 
 
         self.position_side = 'SHORT'  # 持仓方向 可选参数 SHORT(做空) LONG(做多)
-        self.首单数量 = 0.012*18  # 首单数量
+        self.首单数量 = 0.014*5  # 首单数量
         self.first_order_type = 'LIMIT'  # 首单挂单类型 支持 MARKET(市价单) LIMIT(限价单)
         self.leverage = 20.0  # 杠杆倍数
         self.margin_type = 'CROSSED'  # 保证金模式 ISOLATED(逐仓), CROSSED(全仓)
@@ -91,24 +93,24 @@ class Account(object):
         self.开启止盈 = True  # 是否开启止盈 False True
         self.止盈相对于首单 = False
         self.止盈总金额 = 1  # 止盈总金额
-        self.止盈百分比 = 0.4  # 止盈百分比 相对于保证金
-        self.首单止盈百分比 = 0.4  # 首单止盈百分比 相对于保证金
+        self.止盈百分比 = 1.5  # 止盈百分比 相对于保证金
+        self.首单止盈百分比 = 1.5  # 首单止盈百分比 相对于保证金
         # ==========================================止损参数设置===================================
         self.止损类型 = 1  # 0 固定金额止盈  1 百分比止盈
         self.开启止损 = True  # 是否打开止损 True(打开) False(关闭)
         self.止损相对于首单 = True
         self.止损总金额 = 20  # 亏损达到50u市价止损
-        self.止损百分比 = 1.031  # 止损百分比 相对于保证金
-        self.首单止损百分比 = 1.031
+        self.止损百分比 = 5  # 止损百分比 相对于保证金
+        self.首单止损百分比 = 5
         # ==========================================补仓参数设置===================================
-        self.首次补仓数量 = 0.012  # 首次补仓数量
-        self.最大补仓次数 = 6  # 最大补仓次数
+        self.首次补仓数量 = 0.014  # 首次补仓数量
+        self.最大补仓次数 = 8  # 最大补仓次数
         self.补仓倍数 = 2  # 倍数补仓的倍数 如 倍数为2 第一次补仓10个 则后面依次是 20 40 80 160 320
         self.cover_price_type = 'percent'  # 补仓单价格叠加类型 支持 percent(这次补仓的价格必须高于上次的百分之多少) fixed(这次补仓的价格必须高于上次的多少)
         self.补仓价格倍数 = 1.0  # 价格梯度 补仓单价格叠加类型*价格梯度
         # 补仓单价格叠加类型=percent 时生效  固定下跌0.5% => 0  0.5  0.1  0.15  0.2
         #                               固定下跌0.5% 加了梯度3后 => 0  0.5  (0.5+0.5)*3=3  (3+0.5)*3 =10.5  (10.5+5)*3
-        self.补仓价格百分比例 = 0.25  # 这次补仓的价格必须高于上次的百分之多少 如 设置1 第一次补仓价格为5 则后面依次是 5*(1+1%) (5*(1+1%))(1+1%)
+        self.补仓价格百分比例 = 0.8  # 这次补仓的价格必须高于上次的百分之多少 如 设置1 第一次补仓价格为5 则后面依次是 5*(1+1%) (5*(1+1%))(1+1%)
 
         # 补仓单价格叠加类型=fixed 时生效    固定下跌0.01 => 0  0.01  0.02  0.03  0.04  0.05
         #                               固定下跌0.01 加了梯度3后 => 0  0.01  (0.01+0.01)*3=0.06  (0.06+0.01)*3=2.1  (2.1+0.01)+3=6.33
@@ -118,89 +120,5 @@ class Account(object):
 
 
 if __name__ == '__main__':
-    d = Account
-    d.now_price = 1.8674  # 当前价格
-    profit_show_type = ''
-    show_type = ''
-    cover_show_type = ''
-    stop_profit_percent = 0.0
-    target_price = 0.0
-    d.cover_num = d.first_order_num
-    for i in range(1, d.max_cover_num + 2):
-        if d.cover_price_type == 'percent':
-            # 固定下跌0.5% => 0  0.5  0.1  0.15  0.2
-            # 固定下跌0.5% 加了梯度3后 => 0  0.5  (0.5+0.5)*3=3  (3+0.5)*3 =10.5  (10.5+5)*3
-            d.cover_need = round(
-                ((d.cover_need + d.percent_price_cover) * d.price_gradient) if i != 2 else d.percent_price_cover, 2)
-            cover_show_type = "{:.2f}%".format(d.cover_need)
-        else:
-            # 固定下跌0.01 => 0  0.01  0.02  0.03  0.04  0.05
-            # 固定下跌0.01 加了梯度3后 => 0  0.01  (0.01+0.01)*3=0.06  0.07  0.1
-            d.cover_need = round(
-                ((d.cover_need + d.fixed_price_cover) * d.price_gradient) if i != 2 else d.fixed_price_cover, 2)
-            cover_show_type = "{:.2f}{}".format(d.cover_need, d.trade_currency)
-
-        if d.position_side == 'Long':  # 做多
-            show_type = '下跌'
-            profit_show_type = '上涨'
-            if d.cover_price_type == 'percent':
-                target_price = (1 - d.cover_need / 100) * d.entry_price
-            else:
-                target_price = (1 - d.cover_need) * d.entry_price
-
-        else:  # 做空
-            show_type = '上涨'
-            profit_show_type = '下跌'
-
-            if d.cover_price_type == 'percent':
-                target_price = (1 + d.cover_need / 100) * d.entry_price
-            else:
-                target_price = d.cover_need + d.entry_price
-
-        d.cover_num = round(d.cover_num * d.multiple_num_cover if i != 2 else d.first_cover_num, 2)
-        d.cover_value = round(d.cover_num * target_price, 2)
-        d.entry_price = (d.entry_num * d.entry_price + d.cover_num * target_price) / (d.entry_num + d.cover_num)
-        d.entry_num = d.entry_num + d.cover_num
-        d.entry_value = d.entry_num * d.entry_price
-
-        if i == 1:
-            d.cover_need = 0.00
-            if d.cover_price_type == 'percent':
-                cover_show_type = "{:.2f}%".format(d.cover_need)
-            else:
-                cover_show_type = "{:.2f}{}".format(d.cover_need, d.trade_currency)
-            d.cover_num = d.first_order_num
-            target_price = d.now_price
-            d.cover_value = round(d.cover_num * target_price, 2)
-            d.entry_num = d.first_order_num
-            d.entry_price = d.now_price
-            d.entry_value = Decimal(d.entry_num) * Decimal(d.entry_price)
-
-        if d.position_side == 'Long':  # 做多
-            d.stop_profit = max(
-                round(d.entry_price * (1 + d.percent_stop_profit * 0.01), 5),
-                round(d.entry_price + d.fixed_stop_profit, 5))  # 止盈点位 = 仓位价格-目标盈利
-            stop_profit_percent = (Decimal(d.stop_profit) - Decimal(target_price)) / Decimal(target_price) * 100
-        else:  # 做空
-            d.stop_profit = min(
-                round(d.entry_price * (1 - d.percent_stop_profit * 0.01), 5),
-                round(d.entry_price - d.fixed_stop_profit, 5))  # 止盈点位 = 仓位价格+目标盈利
-            stop_profit_percent = (Decimal(target_price) - Decimal(d.stop_profit)) / Decimal(target_price) * 100
-
-        print(
-            "第{0}次补仓 {1}:{2} 触发补仓 订单数量：{3:>10.3f} {4} ".format(str(i - 1), show_type, cover_show_type, d.cover_num,
-                                                               d.symbol) +
-            "订单价值：{0:>8.2f} {1} 保证金：{2:>8.2f} {1} 触发价格：{3:>6.4f}      仓位价格：{4:>6.4f}      止盈点位：{5:>6.4f}      触发价格{6}{7:>2.2f}% 达到盈利点，".format(
-                d.cover_value,
-                d.trade_currency, d.cover_value / 20,
-                target_price, d.entry_price, d.stop_profit, profit_show_type, stop_profit_percent)
-            + "仓位数量：{0:>10.3f} {1} 仓位价值：{2:>8.2f} {3}".format(d.entry_num,
-                                                              d.symbol, d.entry_value, d.trade_currency))
-
-        # print("第" + str(i - 1) + "次补仓 " + show_type + "：" + cover_show_type + " 触发补仓 订单数量：" + "{:>10.5f}".format(
-        #     d.cover_num) + d.symbol + " 订单价值：" + "{:>7.2f}".format(
-        #     d.cover_value) + d.trade_currency + " 触发价格：" + "{:>7.5f}".format(target_price)
-        #       + " 仓位价格：" + "{:>7.5f}".format(d.entry_price) + " 止盈点位：" + "{:>7.5f}".format(
-        #     d.stop_profit) + " 触发价格" + profit_show_type + "{:>2.2f}".format(
-        #     stop_profit_percent) + "% 达到盈利点，仓位数量：" + "{:>10.5f}".format(
-        #     d.entry_num) + d.symbol + " 仓位价值：" + "{:>8.2f}".format(d.entry_value) + d.trade_currency)
+    for i in range(5):
+        print(i)

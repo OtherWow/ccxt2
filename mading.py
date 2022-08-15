@@ -156,75 +156,103 @@ def 马丁开首单(user_main, user_hedge):
         return
 
 
-def 开首单(user_main, user_hedge):
-    user_hedge.首单数量 = 0.0
-    # 主账号下限价止盈止损单 下限价补单 对冲账号根据亏损金额下对冲单
-    if user_main.position_side == 'SHORT':
-        市价单(user_main, user_main.首单数量, 'SELL')
-    if user_main.position_side == 'LONG':
-        市价单(user_main, user_main.首单数量, 'BUY')
-    止盈止损单(user_main)
-    查询账户持仓情况(user_main)
-    # 开始循环下限价单
-    if user_main.position_side == 'SHORT':
-        num = user_main.首次补仓数量
-        last_percent = 0
-        price = 0
-        for i in range(user_main.最大补仓次数):
-            last_percent = user_main.补仓价格百分比例 / 100 + last_percent * user_main.补仓价格倍数
-            price = user_main.entry_price * (1 + last_percent)
-            try:
-                限价单(user_main, num, price, 'SELL')
-            except Exception as e:
-                logger.error(user_main.name + "第{}次限价单下单出错 ".format(i + 1) + str(e))
-            num = num * user_main.补仓倍数
-
-        # 开始下对冲单的市价单
-        # 主账号的止损总金额就是对冲账号的目标止盈金额 当最后一个限价单触发时 对冲单就应该已经能对冲亏损了
-        # (price-user_main.entry_price-user_main.entry_price*user_main.市价手续费率-price*user_main.限价手续费率)*开单数量 = user_main.止损总金额
-        if user_hedge.now_price > user_main.entry_price:
-            hedge_num = user_main.止损总金额 / (
-                    price - user_main.entry_price - user_main.entry_price * user_main.市价手续费率 - price * user_main.限价手续费率)
-            user_hedge.首单数量 = hedge_num
-            市价单(user_hedge, user_hedge.首单数量, 'BUY')
-            止盈止损单(user_hedge)
-    if user_main.position_side == 'LONG':
-        num = user_main.首次补仓数量
-        last_percent = 0
-        price = 0
-        for i in range(user_main.最大补仓次数):
-            last_percent = user_main.补仓价格百分比例 / 100 + last_percent * user_main.补仓价格倍数
-            price = user_main.entry_price * (1 - last_percent)
-            try:
-                限价单(user_main, num, price, 'BUY')
-            except Exception as e:
-                logger.error(user_main.name + "第{}次限价单下单出错 ".format(i + 1) + str(e))
-                break
-            num = num * user_main.补仓倍数
-
-        # 开始下对冲单的市价单
-        # 主账号的止损总金额就是对冲账号的目标止盈金额 当最后一个限价单触发时 对冲单就应该已经能对冲亏损了
-        # (user_main.entry_price-price-user_main.entry_price*user_main.市价手续费率-price*user_main.限价手续费率)*开单数量 = user_main.止损总金额
-        if user_hedge.now_price < user_main.entry_price:
-            hedge_num = user_main.止损总金额 / (
-                    user_main.entry_price - price - user_main.entry_price * user_main.市价手续费率 - price * user_main.限价手续费率)
-            user_hedge.首单数量 = hedge_num
-            市价单(user_hedge, user_hedge.首单数量, 'SELL')
-            止盈止损单(user_hedge)
-
-
 @logger.catch()
-def trade_task(user_main, user_hedge):
+def 双马丁策略(user_main, user_hedge):
     查询账户持仓情况(user_main)
     查询账户持仓情况(user_hedge)
-    if user_main.position_amt == 0 and user_hedge.position_amt == 0:
-        logger.info("主账号与对冲账号皆没有持仓,开始开首单...")
-        开首单(user_main, user_hedge)
-        查询账户持仓情况(user_main)
+    if user_hedge.position_amt > 0:
+        市价平仓(user_hedge)
+        time.sleep(2)
         查询账户持仓情况(user_hedge)
-    if (user_main.position_amt == 0 and user_hedge.position_amt != 0) or (
-            user_main.position_amt != 0 and user_hedge.position_amt == 0):
-        logger.info("主账号还有仓位或者对冲账号还有仓位,等待2个账号清空仓位,之后系统会自动开单！")
+    if user_main.position_amt == 0 and user_hedge.position_amt == 0:
+        撤销所有订单(user_main)
+        撤销所有订单(user_hedge)
+        user_main.马丁补单当前索引 = 0
+        user_main.马丁补单单号字典 = {}
+        if user_main.position_side == 'SHORT':
+            市价单(user_main, user_main.首单数量, 'SELL')
+        if user_main.position_side == 'LONG':
+            市价单(user_main, user_main.首单数量, 'BUY')
+        time.sleep(2)
+        查询账户持仓情况(user_main)
+        user_main.首单价值 = user_main.position_amt * user_main.entry_price
+        止盈止损单(user_main)
+        # 开始循环下限价单
+        if user_main.position_side == 'SHORT':
+            num = user_main.首次补仓数量
+            last_percent = 0
+            for i in range(user_main.最大补仓次数):
+                last_percent = user_main.补仓价格百分比例 / 100 + last_percent * user_main.补仓价格倍数
+                price = user_main.entry_price * (1 + last_percent)
+                try:
+                    限价单(user_main, num, price, 'SELL')
+                    user_main.马丁补单单号字典[i] = user_main.order_info['orderId']
+                except Exception as e:
+                    logger.error(
+                        user_main.name + "第{}次限价单下单出错 ".format(i + 1) + " 价格：" + str(price) + " 数量：" + str(
+                            num) + str(e))
+                num = num * user_main.补仓倍数
+        if user_main.position_side == 'LONG':
+            num = user_main.首次补仓数量
+            last_percent = 0
+            for i in range(user_main.最大补仓次数):
+                last_percent = user_main.补仓价格百分比例 / 100 + last_percent * user_main.补仓价格倍数
+                price = user_main.entry_price * (1 - last_percent)
+                try:
+                    限价单(user_main, num, price, 'BUY')
+                    user_main.马丁补单单号字典[i] = user_main.order_info['orderId']
+                except Exception as e:
+                    logger.error(
+                        user_main.name + "第{}次限价单下单出错 ".format(i + 1) + " 价格：" + str(price) + " 数量：" + str(
+                            num) + str(e))
+                num = num * user_main.补仓倍数
+    else:
+        logger.info(user_main.name + " 持仓数量：" + str(user_main.position_amt) + " 持仓价格：" + str(
+            user_main.entry_price) + "=】【=" + user_hedge.name + " 持仓数量：" + str(
+            user_hedge.position_amt) + " 持仓价格：" + str(user_hedge.entry_price) + " 仓位不为0,无法开单")
+
+
+def 马丁(user):
+    查询账户持仓情况(user)
+    if user.position_amt == 0:
+        撤销所有订单(user)
+        if user.position_side == 'SHORT':
+            市价单(user, user.首单数量, 'SELL')
+        if user.position_side == 'LONG':
+            市价单(user, user.首单数量, 'BUY')
+        time.sleep(2)
+        查询账户持仓情况(user)
+        user.首单价值 = user.position_amt * user.entry_price
+        止盈止损单(user)
+        # 开始循环下限价单
+        if user.position_side == 'SHORT':
+            num = user.首次补仓数量
+            last_percent = 0
+            for i in range(user.最大补仓次数):
+                last_percent = user.补仓价格百分比例 / 100 + last_percent * user.补仓价格倍数
+                price = user.entry_price * (1 + last_percent)
+                try:
+                    限价单(user, num, price, 'SELL')
+                except Exception as e:
+                    logger.error(
+                        user.name + "第{}次限价单下单出错 ".format(i + 1) + " 价格：" + str(price) + " 数量：" + str(
+                            num) + str(e))
+                num = num * user.补仓倍数
+        if user.position_side == 'LONG':
+            num = user.首次补仓数量
+            last_percent = 0
+            for i in range(user.最大补仓次数):
+                last_percent = user.补仓价格百分比例 / 100 + last_percent * user.补仓价格倍数
+                price = user.entry_price * (1 - last_percent)
+                try:
+                    限价单(user, num, price, 'BUY')
+                except Exception as e:
+                    logger.error(
+                        user.name + "第{}次限价单下单出错 ".format(i + 1) + " 价格：" + str(price) + " 数量：" + str(
+                            num) + str(e))
+                num = num * user.补仓倍数
+    else:
+        logger.info(user.name + "账户持仓不为0,无法开单，持仓数量:" + str(user.position_amt) + " 持仓价格:" + str(user.entry_price))
         return
 
 

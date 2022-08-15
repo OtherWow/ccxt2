@@ -11,14 +11,15 @@ if __name__ == '__main__':
     trace2 = logger.add("log/info.log", level="INFO", rotation="00:00")  # 每天0点创建新文件
     user_main = Account("yyn_big")
     user_hedge = Account("yyn_small")
-    user_hedge.首单数量 = user_main.首次补仓数量*40
-    user_hedge.对冲单价格变动百分比触发马丁 = 0.004
-    user_hedge.止盈百分比 = 1.0325
-    user_hedge.止损百分比 = 0.5
-    user_hedge.首单止损百分比 = 0.5
-    user_hedge.首单止盈百分比 = 1.0325
-    user_hedge.止盈相当于首单 = True
-    user_hedge.止损相当于首单 = True
+    # user_hedge.首单数量 = user_main.首次补仓数量*2
+    # user_hedge.首次补仓数量 = user_main.首次补仓数量*1.6
+    # user_hedge.对冲单价格变动百分比触发马丁 = 0.004
+    # user_hedge.止盈百分比 = 5
+    # user_hedge.首单止盈百分比 = 5
+    # user_hedge.止损百分比 = 1.5
+    # user_hedge.首单止损百分比 = 1.5
+    # user_hedge.止盈相当于首单 = True
+    # user_hedge.止损相当于首单 = False
     if user_main.position_side == 'SHORT':
         user_hedge.position_side = 'LONG'
     else:
@@ -35,10 +36,12 @@ if __name__ == '__main__':
     pri = PrivateWebSocket(user_main, user_hedge)
     pri.run()
     logger.info("私有化线程启动完毕,进入task...")
-    if user_main.need_sign:
-        logger.info("需要信号开单，开启启动webhooks...")
-        webhook = Webhooks(user_main, user_hedge)
-        webhook.run()
+    # time.sleep(2)
+    # mading.双马丁策略(user_main, user_hedge)
+    # if user_main.need_sign:
+    #     logger.info("需要信号开单，开启启动webhooks...")
+    #     webhook = Webhooks(user_main, user_hedge)
+    #     webhook.run()
 
     # time.sleep(2)
     # mading.查询账户持仓情况(user_hedge)
