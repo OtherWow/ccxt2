@@ -20,6 +20,54 @@ class PublicWebSocket:
         data = json.loads(message)
         self.user_main.now_price = float(data['p'])
         self.user_hedge.now_price = float(data['p'])
+        # 监控价格 价格大于设定的值且对冲单仓位=0且网格仓位！=0时 市价买入
+        if self.user_hedge.position_amt == 0 and self.user_main.position_amt != 0:
+            if self.user_hedge.position_side == 'SHORT':  # 对冲单做空
+                if self.user_hedge.now_price <= self.user_hedge.开单价格:
+                    logger.info(
+                        self.user_hedge.name + " 当前价格:{:4f}".format(
+                            self.user_hedge.now_price) + "小于等于设定的价格:{:4f}".format(
+                            self.user_hedge.开单价格) + " 对冲单仓位:" + str(self.user_hedge.position_amt) +
+                        " 网格仓位:" + str(self.user_main.position_amt) + " 触发对冲单市价开单,方向：" + self.user_hedge.position_side)
+                    mading.查询账户持仓情况(self.user_hedge)
+                    mading.查询账户持仓情况(self.user_main)
+                    if self.user_hedge.position_amt == 0 and self.user_main.position_amt != 0:
+                        mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'SELL')
+                        logger.info(self.user_hedge.name + " 卖出市价单,数量：" + str(
+                            self.user_hedge.首单数量) + " 当前价格：" + self.user_hedge.now_price) + "方向：" + self.user_hedge.position_side
+                        time.sleep(1)
+                        mading.查询账户持仓情况(self.user_hedge)
+                        mading.查询账户持仓情况(self.user_main)
+            else:  # 对冲单做多
+                if self.user_hedge.now_price >= self.user_hedge.开单价格:
+                    logger.info(
+                        self.user_hedge.name + " 当前价格:{:4f}".format(
+                            self.user_hedge.now_price) + "大于等于设定的价格:{:4f}".format(
+                            self.user_hedge.开单价格) + " 对冲单仓位:" + str(self.user_hedge.position_amt) +
+                        " 网格仓位:" + str(self.user_main.position_amt) + " 触发对冲单市价开单,方向：" + self.user_hedge.position_side)
+                    mading.查询账户持仓情况(self.user_hedge)
+                    mading.查询账户持仓情况(self.user_main)
+                    if self.user_hedge.position_amt == 0 and self.user_main.position_amt != 0:
+                        mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
+                        logger.info(self.user_hedge.name + " 买入市价单,数量：" + str(
+                            self.user_hedge.首单数量) + " 当前价格：" + self.user_hedge.now_price) + "方向：" + self.user_hedge.position_side
+                        time.sleep(1)
+                        mading.查询账户持仓情况(self.user_hedge)
+                        mading.查询账户持仓情况(self.user_main)
+        if self.user_hedge.position_amt != 0:
+            if (self.user_hedge.position_side == 'SHORT' and self.user_hedge.now_price > self.user_hedge.开单价格) or (
+                    self.user_hedge.position_side == 'LONG' and self.user_hedge.now_price < self.user_hedge.开单价格):  # 对冲单做空
+                # 3. 监控价格 价格小于设定的值且对冲单仓位！=0 对冲单市价平仓
+                logger.info(
+                    self.user_hedge.name + " 当前价格:{:4f}".format(self.user_hedge.now_price) + " 设定的价格:{:4f}".format(
+                        self.user_hedge.开单价格) + " 对冲单仓位:" + str(
+                        self.user_hedge.position_amt) + " 触发对冲单市价平仓,方向：" + self.user_hedge.position_side)
+                mading.查询账户持仓情况(self.user_hedge)
+                if self.user_hedge.position_amt != 0:
+                    mading.市价平仓(self.user_hedge)
+                    time.sleep(1)
+                    mading.撤销所有订单(self.user_hedge)
+                    mading.查询账户持仓情况(self.user_hedge)
 
     def on_ping(self, message):
         return
@@ -65,40 +113,49 @@ class PrivateWebSocket:
             for temp in data['a']['P']:
                 if temp['s'] == self.user_main.symbol:
                     pa = abs(float(temp['pa']))
+                    self.user_main.position_amt = abs(float(temp['pa']))
+                    # logger.info(self.user_main.name + "账户仓位变更为【" + str(self.user_main.position_amt) + "】")
                     if pa == 0:
-                        logger.info(self.user_main.name + "账户仓位变更为【0】,重新开单")
-                        mading.双马丁策略(self.user_main, self.user_hedge)
+                        logger.info(self.user_main.name + "账户仓位变更为【0】,清空对冲单仓位，清空网格挂单，清空对冲单挂单")
+                        mading.市价平仓(self.user_hedge)
+                        time.sleep(1)
+                        mading.撤销所有订单(self.user_hedge)
+                        mading.查询账户持仓情况(self.user_main)
+                        mading.查询账户持仓情况(self.user_hedge)
                     return
-        if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':
-            mading.止盈止损单(self.user_main)
-            if self.user_main.马丁补单单号字典[self.user_main.马丁补单当前索引] == data['o']['i']:
-                if self.user_hedge.position_side == 'SHORT':
-                    side = 'SELL'
-                else:
-                    side = 'BUY'
-                if self.user_main.马丁补单当前索引 == 0:
-                    mading.市价单(self.user_hedge, self.user_hedge.首单数量, side)
-                elif self.user_main.马丁补单当前索引 == 1:
-                    mading.市价单(self.user_hedge, self.user_hedge.首次补仓数量, side)
-                    self.num = self.user_hedge.首次补仓数量
-                else:
-                    self.num = self.num * self.user_hedge.补仓倍数
-                    mading.市价单(self.user_hedge, self.num, side)
-                time.sleep(2)
-                mading.止盈止损单(self.user_hedge)
-                self.user_main.马丁补单当前索引 += 1
+        # if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':
+        #     mading.止盈止损单(self.user_main)
+        #     if self.user_main.马丁补单单号字典[self.user_main.马丁补单当前索引] == data['o']['i']:
+        #         if self.user_hedge.position_side == 'SHORT':
+        #             side = 'SELL'
+        #         else:
+        #             side = 'BUY'
+        #         if self.user_main.马丁补单当前索引 == 0:
+        #             mading.市价单(self.user_hedge, self.user_hedge.首单数量, side)
+        #         elif self.user_main.马丁补单当前索引 == 1:
+        #             mading.市价单(self.user_hedge, self.user_hedge.首次补仓数量, side)
+        #             self.num = self.user_hedge.首次补仓数量
+        #         else:
+        #             self.num = self.num * self.user_hedge.补仓倍数
+        #             mading.市价单(self.user_hedge, self.num, side)
+        #         time.sleep(2)
+        #         mading.止盈止损单(self.user_hedge)
+        #         self.user_main.马丁补单当前索引 += 1
 
     def ws2_message(self, ws, message):
         data = json.loads(message)
         if data['e'] == 'ACCOUNT_UPDATE':
             for temp in data['a']['P']:
                 if temp['s'] == self.user_hedge.symbol:
-                    pa = abs(float(temp['pa']))
-                    if pa == 0:
-                        logger.info(self.user_hedge.name + "账户仓位变更为【0】,重新开单")
-                        time.sleep(10)
-                        mading.双马丁策略(self.user_main, self.user_hedge)
-                    return
+                    self.user_hedge.position_amt = abs(float(temp['pa']))
+                    logger.info(self.user_hedge.name + "账户仓位变更为【" + str(self.user_hedge.position_amt) + "】")
+                    # mading.查询账户持仓情况(self.user_hedge)
+                    # time.sleep(1)
+        #             if pa == 0:
+        #                 logger.info(self.user_hedge.name + "账户仓位变更为【0】,重新开单")
+        #                 time.sleep(10)
+        #                 mading.双马丁策略(self.user_main, self.user_hedge)
+        #             return
 
     def on_ping(self, message):
         return

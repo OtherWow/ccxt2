@@ -11,6 +11,8 @@ if __name__ == '__main__':
     trace2 = logger.add("log/info.log", level="INFO", rotation="00:00")  # 每天0点创建新文件
     user_main = Account("yyn_big")
     user_hedge = Account("yyn_small")
+    user_hedge.开单价格 = 1.5365
+    user_hedge.首单数量 = 3900
     # user_hedge.首单数量 = user_main.首次补仓数量*2
     # user_hedge.首次补仓数量 = user_main.首次补仓数量*1.6
     # user_hedge.对冲单价格变动百分比触发马丁 = 0.004
@@ -43,11 +45,11 @@ if __name__ == '__main__':
     #     webhook = Webhooks(user_main, user_hedge)
     #     webhook.run()
 
-    # time.sleep(2)
-    # mading.查询账户持仓情况(user_hedge)
-    # mading.查询当前所有挂单(user_hedge)
-    # mading.查询账户持仓情况(user_main)
-    # mading.查询当前所有挂单(user_main)
+    time.sleep(2)
+    mading.查询账户持仓情况(user_hedge)
+    mading.查询当前所有挂单(user_hedge)
+    mading.查询账户持仓情况(user_main)
+    mading.查询当前所有挂单(user_main)
     #
     # mading.市价平仓(user_hedge)
     # mading.市价平仓(user_main)

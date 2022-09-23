@@ -33,8 +33,8 @@ class Account(object):
         self.min_entry_num = 0.0  # 最小仓位数量
         self.限价单订单簿 = []  # 限价单订单簿
         self.止盈止损订单簿 = []  # 止盈止损订单号
-        self.止损单号=''  # 止损单号
-        self.止盈单号=''  # 止盈单号
+        self.止损单号 = ''  # 止损单号
+        self.止盈单号 = ''  # 止盈单号
         self.马丁触发价格 = 0.0
         self.对冲单价格变动百分比触发马丁 = 0.0
         self.首单价值 = 0.0
@@ -42,9 +42,9 @@ class Account(object):
         self.对冲单平仓触发价 = 0.0
         self.交易对价格精度 = 4  # 交易对价格精度
         self.交易对数量精度 = 0  # 交易对价格精度
-        self.对冲单开单交易簿=[]
-        self.马丁补单单号字典={}
-        self.马丁补单当前索引=0
+        self.对冲单开单交易簿 = []
+        self.马丁补单单号字典 = {}
+        self.马丁补单当前索引 = 0
         # 自定义参数
         # ==========================================apiKey=========================================
         if name == "cx":
@@ -78,9 +78,9 @@ class Account(object):
             self.市价手续费率 = 0.0004  # 手续费率 0.0003 0.0004
             self.限价手续费率 = 0.0002  # 手续费率 0.00012 0.0002
 
-
-        self.position_side = 'SHORT'  # 持仓方向 可选参数 SHORT(做空) LONG(做多)
-        self.首单数量 = 0.014*5  # 首单数量
+        self.position_side = 'LONG'  # 持仓方向 可选参数 SHORT(做空) LONG(做多)
+        self.开单价格 = 0.0  # 开单价格
+        self.首单数量 = 0.014 * 5  # 首单数量
         self.first_order_type = 'LIMIT'  # 首单挂单类型 支持 MARKET(市价单) LIMIT(限价单)
         self.leverage = 20.0  # 杠杆倍数
         self.margin_type = 'CROSSED'  # 保证金模式 ISOLATED(逐仓), CROSSED(全仓)
@@ -118,6 +118,13 @@ class Account(object):
         self.cover_type = 'MARKET'  # 补仓单挂单类型 支持 MARKET(市价单) LIMIT(限价单)
         self.protect_position = 99  # 计划建仓占比 取值0-100 50就是最多买入半仓
 
+        # ==========================================网格参数设置===================================
+        self.开底仓=True #是否开底仓
+        self.投入金额= 100
+        self.网格区间下限=1700
+        self.网格区间上限=1900
+        self.网格数量=5
+        self.grid_list = []
 
 if __name__ == '__main__':
     for i in range(5):

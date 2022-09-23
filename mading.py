@@ -42,6 +42,8 @@ def 获取交易对规则2(user_main, user_hedge):
             user_hedge.交易对价格精度 = int(temp['pricePrecision'])
             user_hedge.交易对数量精度 = int(temp['quantityPrecision'])
             user_hedge.价格保护百分比 = float(temp['triggerProtect'])
+            logger.info(f"用户{user_main.name} 的交易对规则为：【交易对价格精度】：{user_main.交易对价格精度} 【交易对数量精度】：{user_main.交易对数量精度} 【价格保护百分比】：{user_main.价格保护百分比}")
+            logger.info(f"用户{user_hedge.name} 的交易对规则为：【交易对价格精度】：{user_hedge.交易对价格精度} 【交易对数量精度】：{user_hedge.交易对数量精度} 【价格保护百分比】：{user_hedge.价格保护百分比}")
     return
 
 
@@ -211,6 +213,48 @@ def 双马丁策略(user_main, user_hedge):
             user_main.entry_price) + "=】【=" + user_hedge.name + " 持仓数量：" + str(
             user_hedge.position_amt) + " 持仓价格：" + str(user_hedge.entry_price) + " 仓位不为0,无法开单")
 
+def 对冲马丁(user):
+    查询账户持仓情况(user)
+    if user.position_amt == 0:
+        撤销所有订单(user)
+        if user.position_side == 'SHORT':
+            市价单(user, user.首单数量, 'SELL')
+        if user.position_side == 'LONG':
+            市价单(user, user.首单数量, 'BUY')
+        time.sleep(2)
+        查询账户持仓情况(user)
+        user.首单价值 = user.position_amt * user.entry_price
+        止盈止损单(user)
+        # 开始循环下限价单
+        if user.position_side == 'SHORT':
+            num = user.首次补仓数量
+            last_percent = 0
+            for i in range(user.最大补仓次数):
+                last_percent = user.补仓价格百分比例 / 100 + last_percent * user.补仓价格倍数
+                price = user.entry_price * (1 + last_percent)
+                try:
+                    限价单(user, num, price, 'SELL')
+                except Exception as e:
+                    logger.error(
+                        user.name + "第{}次限价单下单出错 ".format(i + 1) + " 价格：" + str(price) + " 数量：" + str(
+                            num) + str(e))
+                num = num * user.补仓倍数
+        if user.position_side == 'LONG':
+            num = user.首次补仓数量
+            last_percent = 0
+            for i in range(user.最大补仓次数):
+                last_percent = user.补仓价格百分比例 / 100 + last_percent * user.补仓价格倍数
+                price = user.entry_price * (1 - last_percent)
+                try:
+                    限价单(user, num, price, 'BUY')
+                except Exception as e:
+                    logger.error(
+                        user.name + "第{}次限价单下单出错 ".format(i + 1) + " 价格：" + str(price) + " 数量：" + str(
+                            num) + str(e))
+                num = num * user.补仓倍数
+    else:
+        logger.info(user.name + "账户持仓不为0,无法开单，持仓数量:" + str(user.position_amt) + " 持仓价格:" + str(user.entry_price))
+        return
 
 def 马丁(user):
     查询账户持仓情况(user)
