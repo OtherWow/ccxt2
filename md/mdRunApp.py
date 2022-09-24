@@ -1,10 +1,8 @@
 import time
-
 from loguru import logger
-
-import mading
-from account import Account
-from mywebsocket import PublicWebSocket, PrivateWebSocket,Webhooks
+from binance import binance as ba
+from user.account import Account
+from mdWebsocket import PublicWebSocket, PrivateWebSocket
 
 if __name__ == '__main__':
     trace = logger.add("log/log.log", rotation="00:00")  # 每天0点创建新文件
@@ -27,10 +25,10 @@ if __name__ == '__main__':
     else:
         user_hedge.position_side = 'SHORT'
     logger.info("开始初始化交易所...")
-    mading.init_exchange(user_main, user_hedge)
+    ba.init_exchange(user_main, user_hedge)
     logger.info("交易所初始化完毕,开始获取用户token...")
-    mading.get_token(user_main, user_hedge)
-    mading.获取交易对规则2(user_main, user_hedge)
+    ba.get_token(user_main, user_hedge)
+    ba.获取交易对规则2(user_main, user_hedge)
     logger.info("获取用户token完毕,开始启动公有化线程获取用户交易对信息...")
     pub = PublicWebSocket(user_main, user_hedge)
     pub.run()
@@ -39,29 +37,29 @@ if __name__ == '__main__':
     pri.run()
     logger.info("私有化线程启动完毕,进入task...")
     # time.sleep(2)
-    # mading.双马丁策略(user_main, user_hedge)
+    # md.双马丁策略(user_main, user_hedge)
     # if user_main.need_sign:
     #     logger.info("需要信号开单，开启启动webhooks...")
     #     webhook = Webhooks(user_main, user_hedge)
     #     webhook.run()
 
     time.sleep(2)
-    mading.查询账户持仓情况(user_hedge)
-    mading.查询当前所有挂单(user_hedge)
-    mading.查询账户持仓情况(user_main)
-    mading.查询当前所有挂单(user_main)
+    ba.查询账户持仓情况(user_hedge)
+    ba.查询当前所有挂单(user_hedge)
+    ba.查询账户持仓情况(user_main)
+    ba.查询当前所有挂单(user_main)
     #
-    # mading.市价平仓(user_hedge)
-    # mading.市价平仓(user_main)
-    # mading.撤销所有订单(user_hedge)
-    # mading.撤销所有订单(user_main)
+    # md.市价平仓(user_hedge)
+    # md.市价平仓(user_main)
+    # md.撤销所有订单(user_hedge)
+    # md.撤销所有订单(user_main)
     # user_hedge.止盈止损订单簿.append('8389765533504603620')
     # user_hedge.止盈止损订单簿.append('8389765533504604462')
 
-    # mading.止盈止损单(user_hedge)
-    # mading.批量撤销订单(user_hedge,user_hedge.止盈止损订单簿)
+    # md.止盈止损单(user_hedge)
+    # md.批量撤销订单(user_hedge,user_hedge.止盈止损订单簿)
     # logger.info(user_hedge.止盈止损订单簿)
-    # mading.查询账户持仓情况(user_hedge)
-    # mading.查询当前所有挂单(user_hedge)
-    # mading.查询账户持仓情况(user_main)
-    # mading.查询当前所有挂单(user_main)
+    # md.查询账户持仓情况(user_hedge)
+    # md.查询当前所有挂单(user_hedge)
+    # md.查询账户持仓情况(user_main)
+    # md.查询当前所有挂单(user_main)

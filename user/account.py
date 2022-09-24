@@ -1,10 +1,12 @@
-from decimal import Decimal
+from queue import Queue
 
 
 class Account(object):
 
     def __init__(self, name):
         # 项目运行需要的参数
+        self.价格保护百分比 = None
+        self.exchange = None
         self.port = 80
         self.now_price = 0.0  # 当前市场标记价格
         self.listen_key = ''  # 监听的key
@@ -119,12 +121,22 @@ class Account(object):
         self.protect_position = 99  # 计划建仓占比 取值0-100 50就是最多买入半仓
 
         # ==========================================网格参数设置===================================
-        self.开底仓=True #是否开底仓
-        self.投入金额= 100
-        self.网格区间下限=1700
-        self.网格区间上限=1900
-        self.网格数量=5
+        self.开底仓 = True  # 是否开底仓
+        self.投入金额 = 10
+        self.网格区间上限 = 1400
+        self.网格区间下限 = 1200
+        self.网格限价止损价格 = 1199.99
+        self.网格市价止损价格 = 1199.98
+        self.网格数量 = 10
+
+        # ==========================================程序控制参数===================================
         self.grid_list = []
+        self.order_map = {}
+        self.单网格数量 = 0
+        self.初始化完成 = False
+        self.已配对次数 = 0
+        self.任务队列 = Queue(self.网格数量 * 2)
+
 
 if __name__ == '__main__':
     for i in range(5):

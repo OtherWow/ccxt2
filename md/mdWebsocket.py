@@ -1,12 +1,12 @@
 import time
-
 import websocket
 import json
 from loguru import logger
 import threading
 from urllib.parse import unquote
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import mading
+from binance import binance as ba
+import md
 
 
 class PublicWebSocket:
@@ -29,15 +29,15 @@ class PublicWebSocket:
                             self.user_hedge.now_price) + "小于等于设定的价格:{:4f}".format(
                             self.user_hedge.开单价格) + " 对冲单仓位:" + str(self.user_hedge.position_amt) +
                         " 网格仓位:" + str(self.user_main.position_amt) + " 触发对冲单市价开单,方向：" + self.user_hedge.position_side)
-                    mading.查询账户持仓情况(self.user_hedge)
-                    mading.查询账户持仓情况(self.user_main)
+                    ba.查询账户持仓情况(self.user_hedge)
+                    ba.查询账户持仓情况(self.user_main)
                     if self.user_hedge.position_amt == 0 and self.user_main.position_amt != 0:
-                        mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'SELL')
+                        ba.市价单(self.user_hedge, self.user_hedge.首单数量, 'SELL')
                         logger.info(self.user_hedge.name + " 卖出市价单,数量：" + str(
                             self.user_hedge.首单数量) + " 当前价格：" + self.user_hedge.now_price) + "方向：" + self.user_hedge.position_side
                         time.sleep(1)
-                        mading.查询账户持仓情况(self.user_hedge)
-                        mading.查询账户持仓情况(self.user_main)
+                        ba.查询账户持仓情况(self.user_hedge)
+                        ba.查询账户持仓情况(self.user_main)
             else:  # 对冲单做多
                 if self.user_hedge.now_price >= self.user_hedge.开单价格:
                     logger.info(
@@ -45,15 +45,15 @@ class PublicWebSocket:
                             self.user_hedge.now_price) + "大于等于设定的价格:{:4f}".format(
                             self.user_hedge.开单价格) + " 对冲单仓位:" + str(self.user_hedge.position_amt) +
                         " 网格仓位:" + str(self.user_main.position_amt) + " 触发对冲单市价开单,方向：" + self.user_hedge.position_side)
-                    mading.查询账户持仓情况(self.user_hedge)
-                    mading.查询账户持仓情况(self.user_main)
+                    ba.查询账户持仓情况(self.user_hedge)
+                    ba.查询账户持仓情况(self.user_main)
                     if self.user_hedge.position_amt == 0 and self.user_main.position_amt != 0:
-                        mading.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
+                        ba.市价单(self.user_hedge, self.user_hedge.首单数量, 'BUY')
                         logger.info(self.user_hedge.name + " 买入市价单,数量：" + str(
                             self.user_hedge.首单数量) + " 当前价格：" + self.user_hedge.now_price) + "方向：" + self.user_hedge.position_side
                         time.sleep(1)
-                        mading.查询账户持仓情况(self.user_hedge)
-                        mading.查询账户持仓情况(self.user_main)
+                        ba.查询账户持仓情况(self.user_hedge)
+                        ba.查询账户持仓情况(self.user_main)
         if self.user_hedge.position_amt != 0:
             if (self.user_hedge.position_side == 'SHORT' and self.user_hedge.now_price > self.user_hedge.开单价格) or (
                     self.user_hedge.position_side == 'LONG' and self.user_hedge.now_price < self.user_hedge.开单价格):  # 对冲单做空
@@ -62,12 +62,12 @@ class PublicWebSocket:
                     self.user_hedge.name + " 当前价格:{:4f}".format(self.user_hedge.now_price) + " 设定的价格:{:4f}".format(
                         self.user_hedge.开单价格) + " 对冲单仓位:" + str(
                         self.user_hedge.position_amt) + " 触发对冲单市价平仓,方向：" + self.user_hedge.position_side)
-                mading.查询账户持仓情况(self.user_hedge)
+                ba.查询账户持仓情况(self.user_hedge)
                 if self.user_hedge.position_amt != 0:
-                    mading.市价平仓(self.user_hedge)
+                    ba.市价平仓(self.user_hedge)
                     time.sleep(1)
-                    mading.撤销所有订单(self.user_hedge)
-                    mading.查询账户持仓情况(self.user_hedge)
+                    ba.撤销所有订单(self.user_hedge)
+                    ba.查询账户持仓情况(self.user_hedge)
 
     def on_ping(self, message):
         return
@@ -117,29 +117,29 @@ class PrivateWebSocket:
                     # logger.info(self.user_main.name + "账户仓位变更为【" + str(self.user_main.position_amt) + "】")
                     if pa == 0:
                         logger.info(self.user_main.name + "账户仓位变更为【0】,清空对冲单仓位，清空网格挂单，清空对冲单挂单")
-                        mading.市价平仓(self.user_hedge)
+                        ba.市价平仓(self.user_hedge)
                         time.sleep(1)
-                        mading.撤销所有订单(self.user_hedge)
-                        mading.查询账户持仓情况(self.user_main)
-                        mading.查询账户持仓情况(self.user_hedge)
+                        ba.撤销所有订单(self.user_hedge)
+                        ba.查询账户持仓情况(self.user_main)
+                        ba.查询账户持仓情况(self.user_hedge)
                     return
-        # if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':
-        #     mading.止盈止损单(self.user_main)
-        #     if self.user_main.马丁补单单号字典[self.user_main.马丁补单当前索引] == data['o']['i']:
+        # if user['e'] == 'ORDER_TRADE_UPDATE' and user['o']['o'] == 'LIMIT' and user['o']['x'] == 'TRADE':
+        #     md.止盈止损单(self.user_main)
+        #     if self.user_main.马丁补单单号字典[self.user_main.马丁补单当前索引] == user['o']['i']:
         #         if self.user_hedge.position_side == 'SHORT':
         #             side = 'SELL'
         #         else:
         #             side = 'BUY'
         #         if self.user_main.马丁补单当前索引 == 0:
-        #             mading.市价单(self.user_hedge, self.user_hedge.首单数量, side)
+        #             md.市价单(self.user_hedge, self.user_hedge.首单数量, side)
         #         elif self.user_main.马丁补单当前索引 == 1:
-        #             mading.市价单(self.user_hedge, self.user_hedge.首次补仓数量, side)
+        #             md.市价单(self.user_hedge, self.user_hedge.首次补仓数量, side)
         #             self.num = self.user_hedge.首次补仓数量
         #         else:
         #             self.num = self.num * self.user_hedge.补仓倍数
-        #             mading.市价单(self.user_hedge, self.num, side)
+        #             md.市价单(self.user_hedge, self.num, side)
         #         time.sleep(2)
-        #         mading.止盈止损单(self.user_hedge)
+        #         md.止盈止损单(self.user_hedge)
         #         self.user_main.马丁补单当前索引 += 1
 
     def ws2_message(self, ws, message):
@@ -149,12 +149,12 @@ class PrivateWebSocket:
                 if temp['s'] == self.user_hedge.symbol:
                     self.user_hedge.position_amt = abs(float(temp['pa']))
                     logger.info(self.user_hedge.name + "账户仓位变更为【" + str(self.user_hedge.position_amt) + "】")
-                    # mading.查询账户持仓情况(self.user_hedge)
+                    # md.查询账户持仓情况(self.user_hedge)
                     # time.sleep(1)
         #             if pa == 0:
         #                 logger.info(self.user_hedge.name + "账户仓位变更为【0】,重新开单")
         #                 time.sleep(10)
-        #                 mading.双马丁策略(self.user_main, self.user_hedge)
+        #                 md.双马丁策略(self.user_main, self.user_hedge)
         #             return
 
     def on_ping(self, message):
@@ -185,13 +185,13 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         data = self.rfile.read(int(self.headers['content-length']))
         data = unquote(str(data, encoding='utf-8'))
-        # print("转化前data:" + data)
+        # print("转化前data:" + user)
         data = json.dumps(eval(data))
-        # print("转化后data:" + data)
+        # print("转化后data:" + user)
         json_obj = json.loads(data)
         if Webhooks.user1.now_timestamp != json_obj['timestamp']:
             Webhooks.user1.now_timestamp = json_obj['timestamp']
-            mading.sign1(json_obj, Webhooks.user1, Webhooks.user2)
+            md.sign1(json_obj, Webhooks.user1, Webhooks.user2)
 
 
 if __name__ == '__main__':
