@@ -48,7 +48,7 @@ def 触发限价单则新增任务队列(data, user: Account, 配对user: Accoun
 
 def 处理任务(user: Account):
     if user.初始化完成 and (not user.任务队列.empty()):
-        logger.info(user.name + "任务队列不为空，开始处理任务")
+        logger.info(user.name + f"【{user.symbol}】任务队列不为空，开始处理任务")
         orderId = user.任务队列.get()
         if orderId in user.order_map:
             grid = user.order_map[orderId]

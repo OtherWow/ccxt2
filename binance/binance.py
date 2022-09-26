@@ -90,7 +90,8 @@ def 查询账户持仓情况(user: Account):
     for temp in account_info['assets']:
         if user.trade_currency in temp['asset']:
             user.wallet_balance = float(temp['walletBalance'])
-            logger.info(user.name + " 账户余额: " + str(user.wallet_balance) + " " + user.trade_currency)
+            logger.info(
+                user.name + "【" + user.symbol + "】 账户余额: " + str(user.wallet_balance) + " " + user.trade_currency)
             break
     for temp in account_info['positions']:
         if user.symbol == temp['symbol']:
@@ -102,7 +103,7 @@ def 查询账户持仓情况(user: Account):
                 user.cover_statistics = 0
             elif user.cover_statistics == 0:
                 user.cover_statistics = 1
-            logger.info(user.name + " 账户【" + user.symbol + "】持仓情况=> 仓位数量：" + str(
+            logger.info(user.name + "【" + user.symbol + "】 账户【" + user.symbol + "】持仓情况=> 仓位数量：" + str(
                 user.real_position_amt) + " " + user.symbol + " 仓位价格:" + str(
                 user.entry_price) + " " + user.trade_currency + " 当前所需起始保证金:" + str(
                 user.initial_margin) + " " + user.trade_currency)
@@ -116,7 +117,7 @@ def 查询当前所有挂单(user: Account):
         'symbol': user.symbol,
         'timestamp': get_timestamp(),
     })
-    logger.debug(user.name + "查询当前所有挂单=>" + str(order_info))
+    logger.debug(user.name + "【" + user.symbol + "】查询当前所有挂单=>" + str(order_info))
 
 
 @logger.catch()
@@ -137,10 +138,12 @@ def 市价平仓(user: Account):
             'quantity': quantity
         })
     else:
-        logger.info(user.name + "账户持仓为0,无需平仓")
+        logger.info(user.name + "【" + user.symbol + "】账户持仓为0,无需平仓")
     if user.real_position_amt != 0:
         logger.debug("市价平仓=>" + str(user.order_info))
-        logger.info(user.name + "市价平仓成功！平仓数量：{:6f}".format(user.position_amt) + " 市价单价格：{:.6f}".format(user.now_price))
+        logger.info(
+            user.name + "【" + user.symbol + "】市价平仓成功！平仓数量：{:6f}".format(user.position_amt) + " 市价单价格：{:.6f}".format(
+                user.now_price))
 
 
 @logger.catch()
@@ -157,7 +160,8 @@ def 市价单(user: Account, num, side):
         方向 = "买入"
     else:
         方向 = "卖出"
-    logger.info(user.name + "市价单下单成功！市价单数量：{:6f}".format(num) + " 市价单价格：{:.6f}".format(user.now_price) + "方向：" + 方向)
+    logger.info(user.name + "【" + user.symbol + "】市价单下单成功！市价单数量：{:6f}".format(num) + " 市价单价格：{:.6f}".format(
+        user.now_price) + "方向：" + 方向)
 
 
 @logger.catch()
@@ -177,7 +181,8 @@ def 限价单(user: Account, num, price, side):
     else:
         方向 = "卖出"
     logger.info(
-        user.name + "限价单下单成功！限价单数量：{:6f}".format(num) + " 限价单价格：{:.6f}".format(price) + "方向：" + 方向 + " 当前价格：" + str(
+        user.name + "【" + user.symbol + "】限价单下单成功！限价单数量：{:6f}".format(num) + " 限价单价格：{:.6f}".format(
+            price) + "方向：" + 方向 + " 当前价格：" + str(
             user.now_price))
 
 
@@ -193,7 +198,7 @@ def 限价止损单(user: Account, 触发价, 委托价):
             "price": round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "限价止损单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】限价止损单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：买入")
     if user.position_side == 'LONG':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -205,7 +210,7 @@ def 限价止损单(user: Account, 触发价, 委托价):
             "price": round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "限价止损单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】限价止损单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
@@ -221,7 +226,7 @@ def 限价止损单自填数量(user: Account, 触发价, 委托价, 数量):
             "price": round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "限价止损单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】限价止损单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：买入")
     if user.position_side == 'LONG':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -233,7 +238,7 @@ def 限价止损单自填数量(user: Account, 触发价, 委托价, 数量):
             "price": round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "限价止损单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】限价止损单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
@@ -248,7 +253,7 @@ def 市价止损单(user: Account, 委托价):
             'stopPrice': round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "市价止损单下单成功！ 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】市价止损单下单成功！ 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：买入")
     if user.position_side == 'LONG':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -259,7 +264,7 @@ def 市价止损单(user: Account, 委托价):
             'stopPrice': round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "市价止损单下单成功！ 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】市价止损单下单成功！ 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
@@ -275,7 +280,7 @@ def 限价止盈单(user: Account, 触发价, 委托价):
             "price": round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "限价止盈单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】限价止盈单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：买入")
     if user.position_side == 'LONG':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -287,7 +292,7 @@ def 限价止盈单(user: Account, 触发价, 委托价):
             "price": round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "限价止盈单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】限价止盈单下单成功！触发价:" + str(触发价) + " 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
@@ -302,7 +307,7 @@ def 市价止盈单(user: Account, 委托价):
             'stopPrice': round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "市价止盈单下单成功！ 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】市价止盈单下单成功！ 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：买入")
     if user.position_side == 'LONG':
         user.order_info = user.exchange.fapiPrivatePostOrder({
@@ -313,7 +318,7 @@ def 市价止盈单(user: Account, 委托价):
             'stopPrice': round(委托价, user.交易对价格精度),
             'priceProtect': 'TRUE',
         })
-        logger.info(user.name + "市价止盈单下单成功！ 委托价：" + str(委托价) + " 当前价格:" + str(
+        logger.info(user.name + "【" + user.symbol + "】市价止盈单下单成功！ 委托价：" + str(委托价) + " 当前价格:" + str(
             user.now_price) + " 首单价值：" + str(user.首单价值) + "方向：卖出")
 
 
@@ -325,7 +330,7 @@ def 撤销所有订单(user: Account):
     })
     user.止盈止损订单簿 = []
     user.限价单订单簿 = []
-    logger.debug(user.name + "撤销所有订单成功！")
+    logger.debug(user.name + "【" + user.symbol + "】撤销所有订单成功！")
 
 
 @logger.catch()
@@ -339,4 +344,4 @@ def 批量撤销订单(user: Account, order_book):
             'timestamp': get_timestamp()
         })
         logger.debug("idsString:" + str(idsString))
-        logger.info(user.name + "批量撤销订单成功！ 订单号：" + str(order_book))
+        logger.info(user.name + "【" + user.symbol + "】批量撤销订单成功！ 订单号：" + str(order_book))

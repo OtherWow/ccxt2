@@ -13,10 +13,10 @@ def get_main():
     user_main.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_main.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_main.position_side = 'LONG'  # 做多
-    user_main.网格区间上限 = 0.235
-    user_main.网格区间下限 = 0.155
-    user_main.网格限价止损价格 = 0.1549
-    user_main.网格市价止损价格 = 0.1548
+    user_main.网格区间上限 = 0.25
+    user_main.网格区间下限 = 0.16
+    user_main.网格限价止损价格 = 0.1599
+    user_main.网格市价止损价格 = 0.1598
     user_main.网格数量 = 396
     user_main.单网格数量 = 33
     return user_main
@@ -29,10 +29,10 @@ def get_hedge():
     user_hedge.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_hedge.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_hedge.position_side = 'SHORT'  # 做空
-    user_hedge.网格区间上限 = 0.235
-    user_hedge.网格区间下限 = 0.155
-    user_hedge.网格限价止损价格 = 0.2351
-    user_hedge.网格市价止损价格 = 0.2352
+    user_hedge.网格区间上限 = 0.25
+    user_hedge.网格区间下限 = 0.16
+    user_hedge.网格限价止损价格 = 0.2501
+    user_hedge.网格市价止损价格 = 0.2502
     user_hedge.网格数量 = 396
     user_hedge.单网格数量 = 33
     return user_hedge
@@ -54,9 +54,9 @@ if __name__ == '__main__':
 
     # ====================================网格4参数设置===================================
     user_hedge_2 = get_hedge()
-    user_hedge_1.symbol = '1000LUNCUSDT'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD
-    user_hedge_1.websocket_symbol = '1000luncusdt'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
-    user_hedge_1.trade_currency = 'USDT'  # 交易货币  USDT  BUSD
+    user_hedge_2.symbol = '1000LUNCUSDT'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD
+    user_hedge_2.websocket_symbol = '1000luncusdt'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
+    user_hedge_2.trade_currency = 'USDT'  # 交易货币  USDT  BUSD
 
     logger.info("开始初始化交易所...")
     ba.init_exchange(user_main_1, user_hedge_1)
@@ -84,6 +84,20 @@ if __name__ == '__main__':
     # ba.限价单(user_main, 30,0.18, 'BUY')
     # ba.限价单(user_main, 30,0.1802, 'BUY')
     # ba.限价单(user_main, 30,0.1804, 'BUY')
+
+    # ba.撤销所有订单(user_main_1)
+    # ba.撤销所有订单(user_main_2)
+    # ba.撤销所有订单(user_hedge_1)
+    # ba.撤销所有订单(user_hedge_2)
+    # ba.市价平仓(user_main_1)
+    # ba.市价平仓(user_main_2)
+    # ba.市价平仓(user_hedge_1)
+    # ba.市价平仓(user_hedge_2)
+    # ba.查询账户持仓情况(user_main_1)
+    # ba.查询账户持仓情况(user_main_2)
+    # ba.查询账户持仓情况(user_hedge_1)
+    # ba.查询账户持仓情况(user_hedge_2)
+
 
     gridBot.创建网格4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
     # if user_main.need_sign:
