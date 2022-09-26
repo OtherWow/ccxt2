@@ -35,6 +35,48 @@ class PublicGridWebSocket:
         self.ws.run_forever(sslopt={"check_hostname": False})
 
 
+def 触发限价单则新增任务队列(data, user: Account, 配对user: Account):
+    if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and (data['o']['s'] == user.symbol):  # 限价单成交
+        if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (
+                user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
+            配对user.已配对次数 += 1
+        logger.info(
+            f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{配对user.已配对次数}】")
+        user.任务队列.put(str(data['o']['i']))
+        return
+
+
+def 处理任务(user: Account):
+    if user.初始化完成 and (not user.任务队列.empty()):
+        logger.info(user.name + "任务队列不为空，开始处理任务")
+    orderId = user.任务队列.get()
+    if orderId in user.order_map:
+        grid = user.order_map[orderId]
+        del user.order_map[orderId]
+        grid.此网格订单号 = ""
+        try:
+            if grid.订单方向 == "SELL":
+                ba.限价单(user, grid.此网格数量, grid.此网格下边界价格, "BUY")
+                grid.订单方向 = "BUY"
+            else:
+                ba.限价单(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
+                grid.订单方向 = "SELL"
+            grid.此网格订单号 = user.order_info['orderId']
+            user.order_map[grid.此网格订单号] = grid
+            logger.info(
+                f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}，已配对次数：【{user.已配对次数}】")
+        except:
+            logger.error(user.name + "处理任务失败! 准备重试！")
+            ba.get_webserver_time()
+            time.sleep(0.5)
+            orderId = str(time.time()).replace(".", "")
+            grid.此网格订单号 = orderId
+            user.order_map[grid.此网格订单号] = grid
+            user.任务队列.put(orderId)
+
+        return
+
+
 class PrivateGridWebSocket:
     def __init__(self, user_main_1: Account, user_hedge_1: Account, user_main_2: Account, user_hedge_2: Account):
         self.num = None
@@ -80,144 +122,58 @@ class PrivateGridWebSocket:
 
     def ws1_message(self, ws, message):
         data = json.loads(message)
-        if data['e'] == 'ACCOUNT_UPDATE':
-            for temp in data['a']['P']:
-                if temp['s'] == self.user_main.symbol:
-                    pa = abs(float(temp['pa']))
-                    self.user_main.position_amt = abs(float(temp['pa']))
-                    # logger.info(self.user_main.name + "账户仓位变更为【" + str(self.user_main.position_amt) + "】")
-                    if pa == 0:
-                        logger.info(self.user_main.name + "账户仓位变更为【0】,撤销所有订单,然后平仓")
-                        ba.撤销所有订单(self.user_main)
-                        ba.撤销所有订单(self.user_hedge)
-                        ba.查询账户持仓情况(self.user_main)
-                        ba.查询账户持仓情况(self.user_hedge)
-                        ba.市价平仓(self.user_main)
-                        ba.市价平仓(self.user_hedge)
-                    return
-        if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':  # 限价单成交
-            if (self.user_main.position_side == "LONG" and data['o']['S'] == 'SELL') or (
-                    self.user_main.position_side == "SHORT" and data['o']['S'] == 'BUY'):
-                self.user_main.已配对次数 += 1
-            logger.info(
-                f"{self.user_main.name}限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{self.user_main.已配对次数}】")
-            self.user_main.任务队列.put(str(data['o']['i']))
+        self.如果仓位为0且满足条件则全部平仓(data, self.user_main_1)
+        触发限价单则新增任务队列(data, self.user_main_1, self.user_main_1)
 
     def ws1_1_message(self, ws, message):
         data = json.loads(message)
-        if data['e'] == 'ACCOUNT_UPDATE':
-            for temp in data['a']['P']:
-                if temp['s'] == self.user_main.symbol:
-                    pa = abs(float(temp['pa']))
-                    self.user_main.position_amt = abs(float(temp['pa']))
-                    # logger.info(self.user_main.name + "账户仓位变更为【" + str(self.user_main.position_amt) + "】")
-                    if pa == 0:
-                        logger.info(self.user_main.name + "账户仓位变更为【0】,撤销所有订单,然后平仓")
-                        ba.撤销所有订单(self.user_main)
-                        ba.撤销所有订单(self.user_hedge)
-                        ba.查询账户持仓情况(self.user_main)
-                        ba.查询账户持仓情况(self.user_hedge)
-                        ba.市价平仓(self.user_main)
-                        ba.市价平仓(self.user_hedge)
-                    return
-        if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':  # 限价单成交
-            if (self.user_main.position_side == "LONG" and data['o']['S'] == 'SELL') or (
-                    self.user_main.position_side == "SHORT" and data['o']['S'] == 'BUY'):
-                self.user_main.已配对次数 += 1
-            logger.info(
-                f"{self.user_main.name}限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{self.user_main.已配对次数}】")
-            self.user_main.任务队列.put(str(data['o']['i']))
+        self.如果仓位为0且满足条件则全部平仓(data, self.user_main_2)
+        触发限价单则新增任务队列(data, self.user_main_2, self.user_main_1)
 
     def ws2_message(self, ws, message):
         data = json.loads(message)
-        if data['e'] == 'ACCOUNT_UPDATE':
-            for temp in data['a']['P']:
-                if temp['s'] == self.user_hedge.symbol:
-                    pa = abs(float(temp['pa']))
-                    self.user_hedge.position_amt = abs(float(temp['pa']))
-                    if pa == 0:
-                        logger.info(self.user_hedge.name + "账户仓位变更为【0】,撤销所有订单,然后平仓")
-                        ba.撤销所有订单(self.user_main)
-                        ba.撤销所有订单(self.user_hedge)
-                        ba.查询账户持仓情况(self.user_main)
-                        ba.查询账户持仓情况(self.user_hedge)
-                        ba.市价平仓(self.user_main)
-                        ba.市价平仓(self.user_hedge)
-                    return
-
-        if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':  # 限价单成交
-            if (self.user_hedge.position_side == "LONG" and data['o']['S'] == 'SELL') or (
-                    self.user_hedge.position_side == "SHORT" and data['o']['S'] == 'BUY'):
-                self.user_hedge.已配对次数 += 1
-            logger.info(
-                f"{self.user_hedge.name}限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{self.user_hedge.已配对次数}】")
-            self.user_hedge.任务队列.put(str(data['o']['i']))
+        self.如果仓位为0且满足条件则全部平仓(data, self.user_hedge_1)
+        触发限价单则新增任务队列(data, self.user_hedge_1, self.user_hedge_1)
 
     def ws2_2_message(self, ws, message):
         data = json.loads(message)
+        self.如果仓位为0且满足条件则全部平仓(data, self.user_hedge_2)
+        触发限价单则新增任务队列(data, self.user_hedge_2, self.user_hedge_1)
+
+    def 如果仓位为0且满足条件则全部平仓(self, data, user: Account):
         if data['e'] == 'ACCOUNT_UPDATE':
             for temp in data['a']['P']:
-                if temp['s'] == self.user_hedge.symbol:
+                if temp['s'] == user.symbol:
                     pa = abs(float(temp['pa']))
-                    self.user_hedge.position_amt = abs(float(temp['pa']))
-                    if pa == 0:
-                        logger.info(self.user_hedge.name + "账户仓位变更为【0】,撤销所有订单,然后平仓")
-                        ba.撤销所有订单(self.user_main)
-                        ba.撤销所有订单(self.user_hedge)
-                        ba.查询账户持仓情况(self.user_main)
-                        ba.查询账户持仓情况(self.user_hedge)
-                        ba.市价平仓(self.user_main)
-                        ba.市价平仓(self.user_hedge)
+                    user.position_amt = abs(float(temp['pa']))
+                    if pa == 0 and ((
+                                            user.position_side == "LONG" and user.now_price <= user.网格限价止损价格) or (
+                                            user.position_side == "SHORT" and user.now_price >= user.网格限价止损价格)):
+                        logger.info(user.name + "账户【" + user.symbol + "】仓位变更为【0】,撤销所有订单,然后平仓")
+                        ba.撤销所有订单(self.user_main_1)
+                        ba.撤销所有订单(self.user_main_2)
+                        ba.撤销所有订单(self.user_hedge_1)
+                        ba.撤销所有订单(self.user_hedge_2)
+                        ba.市价平仓(self.user_main_1)
+                        ba.市价平仓(self.user_main_2)
+                        ba.市价平仓(self.user_hedge_1)
+                        ba.市价平仓(self.user_hedge_2)
+                        ba.查询账户持仓情况(self.user_main_1)
+                        ba.查询账户持仓情况(self.user_main_2)
+                        ba.查询账户持仓情况(self.user_hedge_1)
+                        ba.查询账户持仓情况(self.user_hedge_2)
                     return
-
-        if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':  # 限价单成交
-            if (self.user_hedge.position_side == "LONG" and data['o']['S'] == 'SELL') or (
-                    self.user_hedge.position_side == "SHORT" and data['o']['S'] == 'BUY'):
-                self.user_hedge.已配对次数 += 1
-            logger.info(
-                f"{self.user_hedge.name}限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{self.user_hedge.已配对次数}】")
-            self.user_hedge.任务队列.put(str(data['o']['i']))
 
     def on_ping(self, message):
         return
 
     def 队列任务(self):
         while True:
-            if self.user_main_1.初始化完成 and (not self.user_main_1.任务队列.empty()):
-                logger.info(self.user_main_1.name + "任务队列不为空，开始处理任务")
-                self.处理任务(self.user_main_1)
-            if self.user_hedge_1.初始化完成 and (not self.user_hedge_1.任务队列.empty()):
-                logger.info(self.user_hedge_1.name + "任务队列不为空，开始处理任务")
-                self.处理任务(self.user_hedge_1)
+            处理任务(self.user_main_1)
+            处理任务(self.user_main_2)
+            处理任务(self.user_hedge_1)
+            处理任务(self.user_hedge_2)
             time.sleep(0.2)
-
-    def 处理任务(self, user: Account):
-        orderId = user.任务队列.get()
-        if orderId in user.order_map:
-            grid = user.order_map[orderId]
-            del user.order_map[orderId]
-            grid.此网格订单号 = ""
-            try:
-                if grid.订单方向 == "SELL":
-                    ba.限价单(user, grid.此网格数量, grid.此网格下边界价格, "BUY")
-                    grid.订单方向 = "BUY"
-                else:
-                    ba.限价单(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
-                    grid.订单方向 = "SELL"
-                grid.此网格订单号 = user.order_info['orderId']
-                user.order_map[grid.此网格订单号] = grid
-                logger.info(
-                    f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}，已配对次数：【{user.已配对次数}】")
-            except:
-                ba.get_webserver_time()
-                time.sleep(0.5)
-                orderId = str(time.time()).replace(".", "")
-                grid.此网格订单号 = orderId
-                user.order_map[grid.此网格订单号] = grid
-                self.user_main.任务队列.put(orderId)
-                logger.error(user.name + "处理任务失败! 准备重试！")
-
-            return
 
 
 class Webhooks:
