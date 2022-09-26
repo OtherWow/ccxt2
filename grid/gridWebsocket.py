@@ -49,32 +49,32 @@ def 触发限价单则新增任务队列(data, user: Account, 配对user: Accoun
 def 处理任务(user: Account):
     if user.初始化完成 and (not user.任务队列.empty()):
         logger.info(user.name + "任务队列不为空，开始处理任务")
-    orderId = user.任务队列.get()
-    if orderId in user.order_map:
-        grid = user.order_map[orderId]
-        del user.order_map[orderId]
-        grid.此网格订单号 = ""
-        try:
-            if grid.订单方向 == "SELL":
-                ba.限价单(user, grid.此网格数量, grid.此网格下边界价格, "BUY")
-                grid.订单方向 = "BUY"
-            else:
-                ba.限价单(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
-                grid.订单方向 = "SELL"
-            grid.此网格订单号 = user.order_info['orderId']
-            user.order_map[grid.此网格订单号] = grid
-            logger.info(
-                f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}，已配对次数：【{user.已配对次数}】")
-        except:
-            logger.error(user.name + "处理任务失败! 准备重试！")
-            ba.get_webserver_time()
-            time.sleep(0.5)
-            orderId = str(time.time()).replace(".", "")
-            grid.此网格订单号 = orderId
-            user.order_map[grid.此网格订单号] = grid
-            user.任务队列.put(orderId)
+        orderId = user.任务队列.get()
+        if orderId in user.order_map:
+            grid = user.order_map[orderId]
+            del user.order_map[orderId]
+            grid.此网格订单号 = ""
+            try:
+                if grid.订单方向 == "SELL":
+                    ba.限价单(user, grid.此网格数量, grid.此网格下边界价格, "BUY")
+                    grid.订单方向 = "BUY"
+                else:
+                    ba.限价单(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
+                    grid.订单方向 = "SELL"
+                grid.此网格订单号 = user.order_info['orderId']
+                user.order_map[grid.此网格订单号] = grid
+                logger.info(
+                    f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}") #，已配对次数：【{user.已配对次数}】
+            except:
+                logger.error(user.name + "处理任务失败! 准备重试！")
+                ba.get_webserver_time()
+                time.sleep(0.5)
+                orderId = str(time.time()).replace(".", "")
+                grid.此网格订单号 = orderId
+                user.order_map[grid.此网格订单号] = grid
+                user.任务队列.put(orderId)
 
-        return
+            return
 
 
 class PrivateGridWebSocket:
@@ -98,13 +98,13 @@ class PrivateGridWebSocket:
 
     def private_ws1(self):
         websocket.enableTrace(True)
-        self.ws1 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_main.listen_key,
+        self.ws1 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_main_1.listen_key,
                                           on_message=self.ws1_message)
         self.ws1.run_forever(sslopt={"check_hostname": False})
 
     def private_ws2(self):
         websocket.enableTrace(True)
-        self.ws2 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_hedge.listen_key,
+        self.ws2 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_hedge_2.listen_key,
                                           on_message=self.ws2_message)
         self.ws2.run_forever(sslopt={"check_hostname": False})
 

@@ -18,7 +18,7 @@ def get_main():
     user_main.网格限价止损价格 = 0.1549
     user_main.网格市价止损价格 = 0.1548
     user_main.网格数量 = 396
-    user_main.单网格数量 = 30
+    user_main.单网格数量 = 33
     return user_main
 
 
@@ -34,7 +34,7 @@ def get_hedge():
     user_hedge.网格限价止损价格 = 0.2351
     user_hedge.网格市价止损价格 = 0.2352
     user_hedge.网格数量 = 396
-    user_hedge.单网格数量 = 30
+    user_hedge.单网格数量 = 33
     return user_hedge
 
 
