@@ -14,10 +14,65 @@ class Grid(object):
         self.网格名称 = ""
         self.订单方向 = ""
 
+def 创建网格4(user_main_1: Account, user_hedge_1: Account,user_main_2: Account, user_hedge_2: Account):
+    ba.撤销所有订单(user_main_1)
+    ba.撤销所有订单(user_main_2)
+    ba.撤销所有订单(user_hedge_1)
+    ba.撤销所有订单(user_hedge_2)
+    ba.市价平仓(user_main_1)
+    ba.市价平仓(user_main_2)
+    ba.市价平仓(user_hedge_1)
+    ba.市价平仓(user_hedge_2)
+    ba.查询账户持仓情况(user_main_1)
+    ba.查询账户持仓情况(user_main_2)
+    ba.查询账户持仓情况(user_hedge_1)
+    ba.查询账户持仓情况(user_hedge_2)
+    if user_main_1.position_amt != 0:
+        logger.info(f"{user_main_1.name}账户有持仓，无法创建网格")
+        return
+    if user_main_2.position_amt != 0:
+        logger.info(f"{user_main_2.name}账户有持仓，无法创建网格")
+        return
+    if user_hedge_1.position_amt != 0:
+        logger.info(f"{user_hedge_1.name}账户有持仓，无法创建网格")
+        return
+    if user_hedge_2.position_amt != 0:
+        logger.info(f"{user_hedge_2.name}账户有持仓，无法创建网格")
+        return
+    网格初始化4(user_main_1, user_hedge_1,user_main_2, user_hedge_2)
+    if user_main.position_side == "LONG":  # 做多
+        触发价 = user_main.网格限价止损价格 / (1 - user_main.价格保护百分比 / 2)
+        数量 = user_main.网格数量 * user_main.单网格数量
+        ba.限价止损单自填数量(user_main, 触发价, user_main.网格限价止损价格, 数量)
+        ba.市价止损单(user_main, user_main.网格市价止损价格)
+
+        触发价 = user_hedge.网格限价止损价格 / (1 + user_hedge.价格保护百分比 / 2)
+        数量 = user_hedge.网格数量 * user_hedge.单网格数量
+        ba.限价止损单自填数量(user_hedge, 触发价, user_hedge.网格限价止损价格, 数量)
+        ba.市价止损单(user_hedge, user_hedge.网格区间上限)
+
+    elif user_main.position_side == "SHORT":  # 做空
+        触发价 = user_main.网格限价止损价格 / (1 + user_main.价格保护百分比 / 2)
+        数量 = user_main.网格数量 * user_main.单网格数量
+        ba.限价止损单自填数量(user_main, 触发价, user_main.网格限价止损价格, 数量)
+        ba.市价止损单(user_main, user_main.网格区间上限)
+
+        触发价 = user_hedge.网格限价止损价格 / (1 - user_hedge.价格保护百分比 / 2)
+        数量 = user_hedge.网格数量 * user_hedge.单网格数量
+        ba.限价止损单自填数量(user_hedge, 触发价, user_hedge.网格限价止损价格, 数量)
+        ba.市价止损单(user_hedge, user_hedge.网格市价止损价格)
+
+    logger.info(
+        f"{user_main.name}创建网格成功，网格区间【{user_main.网格区间下限}，{user_main.网格区间上限}】，网格数量{user_main.网格数量}，单网格数量{user_main.单网格数量}，网格限价止损价格{user_main.网格限价止损价格}，网格市价止损价格{user_main.网格市价止损价格}")
+    logger.info(
+        f"{user_hedge.name}创建网格成功，网格区间【{user_hedge.网格区间下限}，{user_hedge.网格区间上限}】，网格数量{user_hedge.网格数量}，单网格数量{user_hedge.单网格数量}，网格限价止损价格{user_hedge.网格限价止损价格}，网格市价止损价格{user_hedge.网格市价止损价格}")
+    return
 
 def 创建网格2(user_main: Account, user_hedge: Account):
     ba.撤销所有订单(user_main)
     ba.撤销所有订单(user_hedge)
+    ba.市价平仓(user_main)
+    ba.市价平仓(user_hedge)
     ba.查询账户持仓情况(user_main)
     ba.查询账户持仓情况(user_hedge)
     if user_main.position_amt != 0:
@@ -62,10 +117,8 @@ def 网格初始化2(user_main: Account, user_hedge: Account):
     user_hedge.grid_list.clear()
     user_main.order_map.clear()
     user_hedge.order_map.clear()
-    网格价格范围 = (user_main.网格区间上限 - user_main.网格区间下限) / user_main.网格数量
-    user_main.单网格数量 = round(user_main.投入金额 * user_main.leverage / user_main.now_price / user_main.网格数量,
-                            user_main.交易对数量精度)
-    当前下边界价格 = user_main.网格区间下限
+    网格价格范围 = round((user_main.网格区间上限 - user_main.网格区间下限) / user_main.网格数量, user_main.交易对价格精度)
+    当前下边界价格 = round(user_main.网格区间下限, user_main.交易对价格精度)
     for i in range(user_main.网格数量):
         grid = Grid()
         grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
@@ -75,9 +128,7 @@ def 网格初始化2(user_main: Account, user_hedge: Account):
         当前下边界价格 = 当前下边界价格 + 网格价格范围
         user_main.grid_list.append(grid)
 
-    网格价格范围 = (user_hedge.网格区间上限 - user_hedge.网格区间下限) / user_hedge.网格数量
-    user_hedge.单网格数量 = round(user_hedge.投入金额 * user_hedge.leverage / user_hedge.now_price / user_hedge.网格数量,
-                             user_hedge.交易对数量精度)
+    网格价格范围 = round((user_hedge.网格区间上限 - user_hedge.网格区间下限) / user_hedge.网格数量, user_hedge.交易对价格精度)
     当前下边界价格 = user_hedge.网格区间下限
     for i in range(user_hedge.网格数量):
         grid = Grid()
@@ -101,8 +152,8 @@ def 校验网格2(user_main: Account, user_hedge: Account):
     网络间隔 = 0.03
 
     for i in range(0, len(user_main.grid_list)):
-        grid = user_main.grid_list[i].此网格数量
-        grid2 = user_hedge.grid_list[i].此网格数量
+        grid = user_main.grid_list[i]
+        grid2 = user_hedge.grid_list[i]
         if grid.此网格订单号 == "":
             if user_main.position_side == "LONG":  # 做多
                 if user_main.now_price <= grid.此网格下边界价格:
@@ -162,10 +213,10 @@ def 校验网格2(user_main: Account, user_hedge: Account):
             else:
                 logger.info(f"{user_main.name} 请先设置持仓方向！")
                 return
-            grid.此网格订单号 = user_main.order_info['orderId']
-            grid2.此网格订单号 = user_hedge.order_info['orderId']
-            user_main.order_map[user_main.order_info['orderId']] = grid
-            user_hedge.order_map[user_hedge.order_info['orderId']] = grid2
+            grid.此网格订单号 = str(user_main.order_info['orderId'])
+            grid2.此网格订单号 = str(user_hedge.order_info['orderId'])
+            user_main.order_map[grid.此网格订单号] = grid
+            user_hedge.order_map[grid2.此网格订单号] = grid2
             logger.info(
                 f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user_main.order_info['price']}，数量：{user_main.order_info['origQty']}，方向：{user_main.order_info['side']}")
             logger.info(
@@ -202,7 +253,6 @@ def 网格初始化(user: Account):
     user.grid_list.clear()
     user.order_map.clear()
     网格价格范围 = (user.网格区间上限 - user.网格区间下限) / user.网格数量
-    user.单网格数量 = round(user.投入金额 * user.leverage / user.now_price / user.网格数量, user.交易对数量精度)
     当前下边界价格 = user.网格区间下限
     for i in range(user.网格数量):
         grid = Grid()
@@ -253,8 +303,8 @@ def 校验网格(user: Account):
             else:
                 logger.info(f"{user.name} 请先设置持仓方向！")
                 return
-            grid.此网格订单号 = user.order_info['orderId']
-            user.order_map[user.order_info['orderId']] = grid
+            grid.此网格订单号 = str(user.order_info['orderId'])
+            user.order_map[grid.此网格订单号] = grid
             logger.info(
                 f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}")
     if 市价单数量 != 0:

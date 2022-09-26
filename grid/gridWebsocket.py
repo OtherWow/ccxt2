@@ -36,16 +36,22 @@ class PublicGridWebSocket:
 
 
 class PrivateGridWebSocket:
-    def __init__(self, user_main: Account, user_hedge: Account):
+    def __init__(self, user_main_1: Account, user_hedge_1: Account, user_main_2: Account, user_hedge_2: Account):
         self.num = None
         self.ws1 = None
+        self.ws1_1 = None
         self.ws2 = None
-        self.user_main = user_main
-        self.user_hedge = user_hedge
+        self.ws2_2 = None
+        self.user_main_1 = user_main_1
+        self.user_main_2 = user_main_2
+        self.user_hedge_1 = user_hedge_1
+        self.user_hedge_2 = user_hedge_2
 
     def run(self):
         threading.Thread(target=self.private_ws1).start()
+        threading.Thread(target=self.private_ws1_1).start()
         threading.Thread(target=self.private_ws2).start()
+        threading.Thread(target=self.private_ws2_2).start()
         threading.Thread(target=self.队列任务).start()
 
     def private_ws1(self):
@@ -60,7 +66,44 @@ class PrivateGridWebSocket:
                                           on_message=self.ws2_message)
         self.ws2.run_forever(sslopt={"check_hostname": False})
 
+    def private_ws1_1(self):
+        websocket.enableTrace(True)
+        self.ws1_1 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_main_2.listen_key,
+                                            on_message=self.ws1_1_message)
+        self.ws1_1.run_forever(sslopt={"check_hostname": False})
+
+    def private_ws2_2(self):
+        websocket.enableTrace(True)
+        self.ws2_2 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_hedge_2.listen_key,
+                                            on_message=self.ws2_2_message)
+        self.ws2_2.run_forever(sslopt={"check_hostname": False})
+
     def ws1_message(self, ws, message):
+        data = json.loads(message)
+        if data['e'] == 'ACCOUNT_UPDATE':
+            for temp in data['a']['P']:
+                if temp['s'] == self.user_main.symbol:
+                    pa = abs(float(temp['pa']))
+                    self.user_main.position_amt = abs(float(temp['pa']))
+                    # logger.info(self.user_main.name + "账户仓位变更为【" + str(self.user_main.position_amt) + "】")
+                    if pa == 0:
+                        logger.info(self.user_main.name + "账户仓位变更为【0】,撤销所有订单,然后平仓")
+                        ba.撤销所有订单(self.user_main)
+                        ba.撤销所有订单(self.user_hedge)
+                        ba.查询账户持仓情况(self.user_main)
+                        ba.查询账户持仓情况(self.user_hedge)
+                        ba.市价平仓(self.user_main)
+                        ba.市价平仓(self.user_hedge)
+                    return
+        if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':  # 限价单成交
+            if (self.user_main.position_side == "LONG" and data['o']['S'] == 'SELL') or (
+                    self.user_main.position_side == "SHORT" and data['o']['S'] == 'BUY'):
+                self.user_main.已配对次数 += 1
+            logger.info(
+                f"{self.user_main.name}限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{self.user_main.已配对次数}】")
+            self.user_main.任务队列.put(str(data['o']['i']))
+
+    def ws1_1_message(self, ws, message):
         data = json.loads(message)
         if data['e'] == 'ACCOUNT_UPDATE':
             for temp in data['a']['P']:
@@ -110,17 +153,42 @@ class PrivateGridWebSocket:
                 f"{self.user_hedge.name}限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{self.user_hedge.已配对次数}】")
             self.user_hedge.任务队列.put(str(data['o']['i']))
 
+    def ws2_2_message(self, ws, message):
+        data = json.loads(message)
+        if data['e'] == 'ACCOUNT_UPDATE':
+            for temp in data['a']['P']:
+                if temp['s'] == self.user_hedge.symbol:
+                    pa = abs(float(temp['pa']))
+                    self.user_hedge.position_amt = abs(float(temp['pa']))
+                    if pa == 0:
+                        logger.info(self.user_hedge.name + "账户仓位变更为【0】,撤销所有订单,然后平仓")
+                        ba.撤销所有订单(self.user_main)
+                        ba.撤销所有订单(self.user_hedge)
+                        ba.查询账户持仓情况(self.user_main)
+                        ba.查询账户持仓情况(self.user_hedge)
+                        ba.市价平仓(self.user_main)
+                        ba.市价平仓(self.user_hedge)
+                    return
+
+        if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE':  # 限价单成交
+            if (self.user_hedge.position_side == "LONG" and data['o']['S'] == 'SELL') or (
+                    self.user_hedge.position_side == "SHORT" and data['o']['S'] == 'BUY'):
+                self.user_hedge.已配对次数 += 1
+            logger.info(
+                f"{self.user_hedge.name}限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{self.user_hedge.已配对次数}】")
+            self.user_hedge.任务队列.put(str(data['o']['i']))
+
     def on_ping(self, message):
         return
 
     def 队列任务(self):
         while True:
-            if self.user_main.初始化完成 and (not self.user_main.任务队列.empty()):
-                logger.info(self.user_main.name + "任务队列不为空，开始处理任务")
-                self.处理任务(self.user_main)
-            if self.user_hedge.初始化完成 and (not self.user_hedge.任务队列.empty()):
-                logger.info(self.user_hedge.name + "任务队列不为空，开始处理任务")
-                self.处理任务(self.user_hedge)
+            if self.user_main_1.初始化完成 and (not self.user_main_1.任务队列.empty()):
+                logger.info(self.user_main_1.name + "任务队列不为空，开始处理任务")
+                self.处理任务(self.user_main_1)
+            if self.user_hedge_1.初始化完成 and (not self.user_hedge_1.任务队列.empty()):
+                logger.info(self.user_hedge_1.name + "任务队列不为空，开始处理任务")
+                self.处理任务(self.user_hedge_1)
             time.sleep(0.2)
 
     def 处理任务(self, user: Account):
@@ -140,14 +208,14 @@ class PrivateGridWebSocket:
                 user.order_map[grid.此网格订单号] = grid
                 logger.info(
                     f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}，已配对次数：【{user.已配对次数}】")
-            except Exception as e:
+            except:
                 ba.get_webserver_time()
                 time.sleep(0.5)
                 orderId = str(time.time()).replace(".", "")
                 grid.此网格订单号 = orderId
                 user.order_map[grid.此网格订单号] = grid
                 self.user_main.任务队列.put(orderId)
-                logger.error(user.name + '处理任务失败!' + str(e) + " 准备重试！")
+                logger.error(user.name + "处理任务失败! 准备重试！")
 
             return
 

@@ -66,9 +66,9 @@ class Account(object):
             self.api_key = 'WgDjyszZYXz21MDlrvZxtYgrPtdmIZkP81gdiAX4XmmomHU21Hk8kqLtwcT93yOY'
             self.secret = 'PozIcU1yTTnMyGUe9Cq9VUKhKGg3yq5MK257RM8ghbM0va7U0RKNey9BFdLF5KQx'
         # ==========================================交易对相关参数设置===================================
-        self.symbol = 'ETHUSDT'  # 交易对  LUNA2BUSD   ETHUSDT
-        self.websocket_symbol = 'ethusdt'  # 交易对  luna2busd   ethusdt
-        self.trade_currency = 'USDT'  # 交易货币  USDT  BUSD
+        self.symbol = 'ETHBUSD'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD
+        self.websocket_symbol = 'ethbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
+        self.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
         self.不算手续费 = True  # 是否需要手续费
         if self.不算手续费:
             self.市价手续费率 = 0.0  # 手续费率 0.0003 0.0004
@@ -128,11 +128,11 @@ class Account(object):
         self.网格限价止损价格 = 1199.99
         self.网格市价止损价格 = 1199.98
         self.网格数量 = 10
-
+        self.单网格数量 = 0
         # ==========================================程序控制参数===================================
         self.grid_list = []
         self.order_map = {}
-        self.单网格数量 = 0
+
         self.初始化完成 = False
         self.已配对次数 = 0
         self.任务队列 = Queue(self.网格数量 * 2)
