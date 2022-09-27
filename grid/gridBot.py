@@ -44,31 +44,31 @@ def 创建网格4(user_main_1: Account, user_hedge_1: Account, user_main_2: Acco
     if user_main_1.position_side == "LONG":  # 做多
         触发价 = user_main_1.网格限价止损价格 / (1 - user_main_1.价格保护百分比 / 2)
         数量 = user_main_1.网格数量 * user_main_1.单网格数量/2
-        ba.限价止损单自填数量(user_main_1, 触发价, user_main_1.网格限价止损价格, 数量)
+        # ba.限价止损单自填数量(user_main_1, 触发价, user_main_1.网格限价止损价格, 数量)
         ba.市价止损单(user_main_1, user_main_1.网格市价止损价格)
-        ba.限价止损单自填数量(user_main_2, 触发价, user_main_2.网格限价止损价格, 数量)
+        # ba.限价止损单自填数量(user_main_2, 触发价, user_main_2.网格限价止损价格, 数量)
         ba.市价止损单(user_main_2, user_main_2.网格市价止损价格)
 
         触发价 = user_hedge_1.网格限价止损价格 / (1 + user_hedge_1.价格保护百分比 / 2)
         数量 = user_hedge_1.网格数量 * user_hedge_1.单网格数量/2
-        ba.限价止损单自填数量(user_hedge_1, 触发价, user_hedge_1.网格限价止损价格, 数量)
+        # ba.限价止损单自填数量(user_hedge_1, 触发价, user_hedge_1.网格限价止损价格, 数量)
         ba.市价止损单(user_hedge_1, user_hedge_1.网格区间上限)
-        ba.限价止损单自填数量(user_hedge_2, 触发价, user_hedge_2.网格限价止损价格, 数量)
+        # ba.限价止损单自填数量(user_hedge_2, 触发价, user_hedge_2.网格限价止损价格, 数量)
         ba.市价止损单(user_hedge_2, user_hedge_2.网格区间上限)
 
     elif user_main_1.position_side == "SHORT":  # 做空
         触发价 = user_main_1.网格限价止损价格 / (1 + user_main_1.价格保护百分比 / 2)
         数量 = user_main_1.网格数量 * user_main_1.单网格数量/2
-        ba.限价止损单自填数量(user_main_1, 触发价, user_main_1.网格限价止损价格, 数量)
+        # ba.限价止损单自填数量(user_main_1, 触发价, user_main_1.网格限价止损价格, 数量)
         ba.市价止损单(user_main_1, user_main_1.网格区间上限)
-        ba.限价止损单自填数量(user_main_2, 触发价, user_main_2.网格限价止损价格, 数量)
+        # ba.限价止损单自填数量(user_main_2, 触发价, user_main_2.网格限价止损价格, 数量)
         ba.市价止损单(user_main_2, user_main_2.网格区间上限)
 
         触发价 = user_hedge_1.网格限价止损价格 / (1 - user_hedge_1.价格保护百分比 / 2)
         数量 = user_hedge_1.网格数量 * user_hedge_1.单网格数量/2
-        ba.限价止损单自填数量(user_hedge_1, 触发价, user_hedge_1.网格限价止损价格, 数量)
+        # ba.限价止损单自填数量(user_hedge_1, 触发价, user_hedge_1.网格限价止损价格, 数量)
         ba.市价止损单(user_hedge_1, user_hedge_1.网格市价止损价格)
-        ba.限价止损单自填数量(user_hedge_2, 触发价, user_hedge_2.网格限价止损价格, 数量)
+        # ba.限价止损单自填数量(user_hedge_2, 触发价, user_hedge_2.网格限价止损价格, 数量)
         ba.市价止损单(user_hedge_2, user_hedge_2.网格市价止损价格)
 
     logger.info(
@@ -95,7 +95,7 @@ def 网格初始化4(user_main_1: Account, user_hedge_1: Account, user_main_2: A
         grid.此网格下边界价格 = 当前下边界价格
         grid.此网格数量 = user_main_1.单网格数量
         当前下边界价格 = 当前下边界价格 + 网格价格范围
-        if i <= 197:
+        if i <= (user_main_1.网格数量 / 2-1):
             grid.网格名称 = f"{user_main_1.name}网格{i}【{user_main_1.symbol}】"
             user_main_1.grid_list.append(grid)
         else:
@@ -110,7 +110,7 @@ def 网格初始化4(user_main_1: Account, user_hedge_1: Account, user_main_2: A
         grid.此网格下边界价格 = 当前下边界价格
         grid.此网格数量 = user_hedge_1.单网格数量
         当前下边界价格 = 当前下边界价格 + 网格价格范围
-        if i <= 197:
+        if i <= (user_hedge_1.网格数量 / 2-1):
             grid.网格名称 = f"{user_hedge_1.name}网格{i}【{user_hedge_1.symbol}】"
             user_hedge_1.grid_list.append(grid)
         else:

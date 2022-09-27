@@ -13,12 +13,12 @@ def get_main():
     user_main.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_main.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_main.position_side = 'LONG'  # 做多
-    user_main.网格区间上限 = 0.25
-    user_main.网格区间下限 = 0.16
-    user_main.网格限价止损价格 = 0.1599
-    user_main.网格市价止损价格 = 0.1598
-    user_main.网格数量 = 396
-    user_main.单网格数量 = 33
+    user_main.网格区间上限 = 0.3685
+    user_main.网格区间下限 = 0.2485
+    user_main.网格限价止损价格 = 0.2484
+    user_main.网格市价止损价格 = 0.2484
+    user_main.网格数量 = 398
+    user_main.单网格数量 = 25
     return user_main
 
 
@@ -29,12 +29,12 @@ def get_hedge():
     user_hedge.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_hedge.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_hedge.position_side = 'SHORT'  # 做空
-    user_hedge.网格区间上限 = 0.25
-    user_hedge.网格区间下限 = 0.16
-    user_hedge.网格限价止损价格 = 0.2501
-    user_hedge.网格市价止损价格 = 0.2502
-    user_hedge.网格数量 = 396
-    user_hedge.单网格数量 = 33
+    user_hedge.网格区间上限 = 0.3685
+    user_hedge.网格区间下限 = 0.2485
+    user_hedge.网格限价止损价格 = 0.3686
+    user_hedge.网格市价止损价格 = 0.3686
+    user_hedge.网格数量 = 398
+    user_hedge.单网格数量 = 25
     return user_hedge
 
 

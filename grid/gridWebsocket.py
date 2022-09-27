@@ -66,7 +66,7 @@ def 处理任务(user: Account):
                 logger.info(
                     f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}") #，已配对次数：【{user.已配对次数}】
             except:
-                logger.error(user.name + "处理任务失败! 准备重试！")
+                logger.debug(user.name + "处理任务失败! 准备重试！")
                 ba.get_webserver_time()
                 time.sleep(0.5)
                 orderId = str(time.time()).replace(".", "")
