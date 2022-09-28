@@ -37,11 +37,11 @@ class PublicGridWebSocket:
 
 def 触发限价单则新增任务队列(data, user: Account, 配对user: Account):
     if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and (data['o']['s'] == user.symbol):  # 限价单成交
-        if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (
-                user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
+        if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
             配对user.已配对次数 += 1
-        logger.info(
-            f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{配对user.已配对次数}】")
+            logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{配对user.已配对次数}】")
+        else:
+            logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}")
         user.任务队列.put(str(data['o']['i']))
         return
 
@@ -56,17 +56,17 @@ def 处理任务(user: Account):
             grid.此网格订单号 = ""
             try:
                 if grid.订单方向 == "SELL":
-                    ba.限价单(user, grid.此网格数量, grid.此网格下边界价格, "BUY")
+                    ba.限价单抛异常(user, grid.此网格数量, grid.此网格下边界价格, "BUY",grid)
                     grid.订单方向 = "BUY"
                 else:
-                    ba.限价单(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
+                    ba.限价单抛异常(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
                     grid.订单方向 = "SELL"
                 grid.此网格订单号 = user.order_info['orderId']
                 user.order_map[grid.此网格订单号] = grid
                 logger.info(
                     f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}") #，已配对次数：【{user.已配对次数}】
             except:
-                logger.debug(user.name + "处理任务失败! 准备重试！")
+                logger.exception(f"{grid.网格名称} 处理任务失败! 准备重试！")
                 ba.get_webserver_time()
                 time.sleep(0.5)
                 orderId = str(time.time()).replace(".", "")

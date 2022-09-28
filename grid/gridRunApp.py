@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from gridWebsocket import PublicGridWebSocket, PrivateGridWebSocket
 from loguru import logger
 from binance import binance as ba
@@ -13,12 +18,12 @@ def get_main():
     user_main.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_main.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_main.position_side = 'LONG'  # 做多
-    user_main.网格区间上限 = 0.3685
-    user_main.网格区间下限 = 0.2485
-    user_main.网格限价止损价格 = 0.2484
-    user_main.网格市价止损价格 = 0.2484
+    user_main.网格区间上限 = 0.34
+    user_main.网格区间下限 = 0.22
+    user_main.网格限价止损价格 = 0.2199
+    user_main.网格市价止损价格 = 0.2199
     user_main.网格数量 = 398
-    user_main.单网格数量 = 25
+    user_main.单网格数量 = 30
     return user_main
 
 
@@ -29,12 +34,12 @@ def get_hedge():
     user_hedge.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_hedge.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_hedge.position_side = 'SHORT'  # 做空
-    user_hedge.网格区间上限 = 0.3685
-    user_hedge.网格区间下限 = 0.2485
-    user_hedge.网格限价止损价格 = 0.3686
-    user_hedge.网格市价止损价格 = 0.3686
+    user_hedge.网格区间上限 = 0.34
+    user_hedge.网格区间下限 = 0.22
+    user_hedge.网格限价止损价格 = 0.3401
+    user_hedge.网格市价止损价格 = 0.3401
     user_hedge.网格数量 = 398
-    user_hedge.单网格数量 = 25
+    user_hedge.单网格数量 = 30
     return user_hedge
 
 
@@ -50,7 +55,6 @@ if __name__ == '__main__':
     user_main_2.symbol = '1000LUNCUSDT'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD  1000LUNCUSDT
     user_main_2.websocket_symbol = '1000luncusdt'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd  1000luncusdt
     user_main_2.trade_currency = 'USDT'  # 交易货币  USDT  BUSD
-
 
     # ====================================网格4参数设置===================================
     user_hedge_2 = get_hedge()
@@ -97,7 +101,6 @@ if __name__ == '__main__':
     # ba.查询账户持仓情况(user_main_2)
     # ba.查询账户持仓情况(user_hedge_1)
     # ba.查询账户持仓情况(user_hedge_2)
-
 
     gridBot.创建网格4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
     # if user_main.need_sign:

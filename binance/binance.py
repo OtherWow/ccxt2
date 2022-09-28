@@ -8,6 +8,7 @@ import http.client
 import os
 
 # =============================初始化交易所并获取市场行情==================================
+from grid.gridBot import Grid
 from user.account import Account
 
 
@@ -185,6 +186,25 @@ def 限价单(user: Account, num, price, side):
             price) + "方向：" + 方向 + " 当前价格：" + str(
             user.now_price))
 
+
+def 限价单抛异常(user: Account, num, price, side,grid:Grid):
+    user.order_info = user.exchange.fapiPrivatePostOrder({
+        'symbol': user.symbol,
+        'side': side,
+        'type': 'LIMIT',  # 限价单
+        'quantity': round(num, user.交易对数量精度),  # 数量
+        'price': round(price, user.交易对价格精度),  # 价格
+        'timestamp': get_timestamp(),
+        'timeInForce': "GTC",
+    })
+    user.限价单订单簿.append(user.order_info['orderId'])
+    if side == 'BUY':
+        方向 = "买入"
+    else:
+        方向 = "卖出"
+    logger.info(grid.网格名称 + "限价单下单成功！限价单数量：{:6f}".format(num) + " 限价单价格：{:.6f}".format(
+            price) + "方向：" + 方向 + " 当前价格：" + str(
+            user.now_price))
 
 @logger.catch()
 def 限价止损单(user: Account, 触发价, 委托价):
