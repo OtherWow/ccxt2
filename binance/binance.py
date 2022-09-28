@@ -119,6 +119,29 @@ def 查询当前所有挂单(user: Account):
         'timestamp': get_timestamp(),
     })
     logger.debug(user.name + "【" + user.symbol + "】查询当前所有挂单=>" + str(order_info))
+    return order_info
+
+
+@logger.catch()
+def 查询当前所有挂单NoSymbol(user: Account):
+    order_info = user.exchange.fapiPrivateGetOpenOrders({
+        'timestamp': get_timestamp(),
+    })
+    logger.debug(user.name + "【" + user.symbol + "】查询当前所有挂单=>" + str(order_info))
+    return order_info
+
+
+@logger.catch()
+def 统计账户挂单详情(user: Account):
+    orderInfo = 查询当前所有挂单NoSymbol(user)
+    count_1000LUNCBUSD = 0
+    count_1000LUNCUSDT = 0
+    for temp in orderInfo:
+        if temp['symbol'] == '1000LUNCBUSD':
+            count_1000LUNCBUSD += 1
+        if temp['symbol'] == '1000LUNCUSDT':
+            count_1000LUNCUSDT += 1
+    logger.info(f"{user.name}账号挂单详情： 1000LUNCBUSD挂单数量:{count_1000LUNCBUSD} , 1000LUNCUSDT挂单数量:{count_1000LUNCUSDT}")
 
 
 @logger.catch()
@@ -187,7 +210,7 @@ def 限价单(user: Account, num, price, side):
             user.now_price))
 
 
-def 限价单抛异常(user: Account, num, price, side,grid:Grid):
+def 限价单抛异常(user: Account, num, price, side, grid: Grid):
     user.order_info = user.exchange.fapiPrivatePostOrder({
         'symbol': user.symbol,
         'side': side,
@@ -198,13 +221,15 @@ def 限价单抛异常(user: Account, num, price, side,grid:Grid):
         'timeInForce': "GTC",
     })
     user.限价单订单簿.append(user.order_info['orderId'])
+    grid.订单方向 = side
+    grid.此网格订单号 = user.order_info['orderId']
     if side == 'BUY':
         方向 = "买入"
     else:
         方向 = "卖出"
-    logger.info(grid.网格名称 + "限价单下单成功！限价单数量：{:6f}".format(num) + " 限价单价格：{:.6f}".format(
-            price) + "方向：" + 方向 + " 当前价格：" + str(
-            user.now_price))
+    logger.info(grid.网格名称 + "限价单下单成功！限价单数量：{:6f}".format(num) + " 限价单价格：{:.6f}".format(price) + "方向：" + 方向 + " 当前价格：" + str(user.now_price))
+
+
 
 @logger.catch()
 def 限价止损单(user: Account, 触发价, 委托价):

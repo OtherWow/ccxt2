@@ -8,6 +8,9 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from user.account import Account
 from binance import binance as ba
 
+总手续费 = 0
+总盈亏 = 0
+
 
 class PublicGridWebSocket:
     def __init__(self, user_main: Account, user_hedge: Account):
@@ -36,12 +39,17 @@ class PublicGridWebSocket:
 
 
 def 触发限价单则新增任务队列(data, user: Account, 配对user: Account):
-    if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and (data['o']['s'] == user.symbol):  # 限价单成交
+    global 总手续费
+    global 总盈亏
+    if data['e'] == 'ORDER_TRADE_UPDATE':
+        总手续费 += float(data['o']['n'])
+        总盈亏 += float(data['o']['rp'])
+    if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol):  # 限价单成交
         if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
             配对user.已配对次数 += 1
-            logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}，已配对次数：【{配对user.已配对次数}】")
+            logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格：{data['o']['p']}，成交数量：{data['o']['z']}，成交方向：{data['o']['S']}，总手续费：【{总手续费}】，总盈亏：【{总盈亏}】，已配对次数：【{配对user.已配对次数}】")
         else:
-            logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格为{data['o']['p']}，成交数量为{data['o']['z']}，成交方向为{data['o']['S']}")
+            logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格：{data['o']['p']}，成交数量：{data['o']['z']}，成交方向：{data['o']['S']}，总手续费：【{总手续费}】，总盈亏：【{总盈亏}】")
         user.任务队列.put(str(data['o']['i']))
         return
 
@@ -56,17 +64,14 @@ def 处理任务(user: Account):
             grid.此网格订单号 = ""
             try:
                 if grid.订单方向 == "SELL":
-                    ba.限价单抛异常(user, grid.此网格数量, grid.此网格下边界价格, "BUY",grid)
-                    grid.订单方向 = "BUY"
+                    ba.限价单抛异常(user, grid.此网格数量, grid.此网格下边界价格, "BUY", grid)
                 else:
-                    ba.限价单抛异常(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
-                    grid.订单方向 = "SELL"
-                grid.此网格订单号 = user.order_info['orderId']
+                    ba.限价单抛异常(user, grid.此网格数量, grid.此网格上边界价格, "SELL", grid)
                 user.order_map[grid.此网格订单号] = grid
-                logger.info(
-                    f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}") #，已配对次数：【{user.已配对次数}】
+                logger.info(f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}")  # ，已配对次数：【{user.已配对次数}】
             except:
                 logger.exception(f"{grid.网格名称} 处理任务失败! 准备重试！")
+                ba.统计账户挂单详情(user)
                 ba.get_webserver_time()
                 time.sleep(0.5)
                 orderId = str(time.time()).replace(".", "")
@@ -206,7 +211,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         json_obj = json.loads(data)
         if Webhooks.user1.now_timestamp != json_obj['timestamp']:
             Webhooks.user1.now_timestamp = json_obj['timestamp']
-            # md.sign1(json_obj, Webhooks.user1, Webhooks.user2)
+        # md.sign1(json_obj, Webhooks.user1, Webhooks.user2)
 
 
 if __name__ == '__main__':

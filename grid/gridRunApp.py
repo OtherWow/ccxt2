@@ -9,11 +9,13 @@ from binance import binance as ba
 from user.account import Account
 import time
 import gridBot
+import json
 
 
 def get_main():
     # ====================================网格1参数设置===================================
-    user_main = Account("yyn_big")
+    # user_main = Account("yyn_big")
+    user_main = Account("syb")
     user_main.symbol = '1000LUNCBUSD'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD
     user_main.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_main.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
@@ -44,6 +46,7 @@ def get_hedge():
 
 
 if __name__ == '__main__':
+
     trace = logger.add("log/log.log", rotation="00:00")  # 每天0点创建新文件
     trace2 = logger.add("log/info.log", level="INFO", rotation="00:00")  # 每天0点创建新文件
 
@@ -102,7 +105,13 @@ if __name__ == '__main__':
     # ba.查询账户持仓情况(user_hedge_1)
     # ba.查询账户持仓情况(user_hedge_2)
 
-    gridBot.创建网格4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
+
+
+    # for i in range(100):
+    #     ba.限价单(user_main_2, 30, 1.804, 'SELL')
+    # ba.限价单(user_main_2, 30, 1.804, 'SELL')
+    # ba.统计账户挂单详情(user_main_2)
+    # gridBot.创建网格4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
     # if user_main.need_sign:
     #     logger.info("需要信号开单，开启启动webhooks...")
     #     webhook = Webhooks(user_main, user_hedge)
