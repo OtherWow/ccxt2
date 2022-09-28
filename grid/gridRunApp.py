@@ -14,16 +14,16 @@ import json
 
 def get_main():
     # ====================================网格1参数设置===================================
-    # user_main = Account("yyn_big")
-    user_main = Account("syb")
+    user_main = Account("yyn_big")
+    # user_main = Account("syb")
     user_main.symbol = '1000LUNCBUSD'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD
     user_main.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_main.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_main.position_side = 'LONG'  # 做多
-    user_main.网格区间上限 = 0.34
-    user_main.网格区间下限 = 0.22
-    user_main.网格限价止损价格 = 0.2199
-    user_main.网格市价止损价格 = 0.2199
+    user_main.网格区间上限 = 0.325
+    user_main.网格区间下限 = 0.205
+    user_main.网格限价止损价格 = 0.2049
+    user_main.网格市价止损价格 = 0.2049
     user_main.网格数量 = 398
     user_main.单网格数量 = 30
     return user_main
@@ -36,10 +36,10 @@ def get_hedge():
     user_hedge.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_hedge.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_hedge.position_side = 'SHORT'  # 做空
-    user_hedge.网格区间上限 = 0.34
-    user_hedge.网格区间下限 = 0.22
-    user_hedge.网格限价止损价格 = 0.3401
-    user_hedge.网格市价止损价格 = 0.3401
+    user_hedge.网格区间上限 = 0.325
+    user_hedge.网格区间下限 = 0.205
+    user_hedge.网格限价止损价格 = 0.3251
+    user_hedge.网格市价止损价格 = 0.3251
     user_hedge.网格数量 = 398
     user_hedge.单网格数量 = 30
     return user_hedge
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     #     ba.限价单(user_main_2, 30, 1.804, 'SELL')
     # ba.限价单(user_main_2, 30, 1.804, 'SELL')
     # ba.统计账户挂单详情(user_main_2)
-    # gridBot.创建网格4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
+    gridBot.创建网格4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
     # if user_main.need_sign:
     #     logger.info("需要信号开单，开启启动webhooks...")
     #     webhook = Webhooks(user_main, user_hedge)
