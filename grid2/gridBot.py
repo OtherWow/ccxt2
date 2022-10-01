@@ -20,6 +20,10 @@ def 创建网格4(user_main_1: Account, user_hedge_1: Account, user_main_2: Acco
     ba.撤销所有订单(user_main_2)
     ba.撤销所有订单(user_hedge_1)
     ba.撤销所有订单(user_hedge_2)
+    ba.查询账户持仓情况(user_main_1)
+    ba.查询账户持仓情况(user_main_2)
+    ba.查询账户持仓情况(user_hedge_1)
+    ba.查询账户持仓情况(user_hedge_2)
     ba.市价平仓(user_main_1)
     ba.市价平仓(user_main_2)
     ba.市价平仓(user_hedge_1)
@@ -87,8 +91,8 @@ def 网格初始化4(user_main_1: Account, user_hedge_1: Account, user_main_2: A
     user_main_2.order_map.clear()
     user_hedge_1.order_map.clear()
     user_hedge_2.order_map.clear()
-    网格价格范围 = round((user_main_1.网格区间上限 - user_main_1.网格区间下限) / user_main_1.网格数量, user_main_1.交易对价格精度)
-    当前下边界价格 = round(user_main_1.网格区间下限, user_main_1.交易对价格精度)
+    网格价格范围 = (user_main_1.网格区间上限 - user_main_1.网格区间下限) / user_main_1.网格数量
+    当前下边界价格 = user_main_1.网格区间下限
     for i in range(user_main_1.网格数量):
         grid = Grid()
         grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
@@ -102,7 +106,7 @@ def 网格初始化4(user_main_1: Account, user_hedge_1: Account, user_main_2: A
             grid.网格名称 = f"{user_main_1.name}网格{i}【{user_main_2.symbol}】"
             user_main_2.grid_list.append(grid)
 
-    网格价格范围 = round((user_hedge_1.网格区间上限 - user_hedge_1.网格区间下限) / user_hedge_1.网格数量, user_hedge_1.交易对价格精度)
+    网格价格范围 = (user_hedge_1.网格区间上限 - user_hedge_1.网格区间下限) / user_hedge_1.网格数量
     当前下边界价格 = user_hedge_1.网格区间下限
     for i in range(user_hedge_1.网格数量):
         grid = Grid()
@@ -264,7 +268,7 @@ def 校验网格2(user_main: Account, user_hedge: Account):
                         ba.查询账户持仓情况(user_hedge)
                     else:
                         hedge_市价单数量 += grid2.此网格数量
-                        hedge_市价单数量 = "BUY"
+                        hedge_市价单方向 = "BUY"
                     ba.限价单(user_hedge, grid2.此网格数量, grid2.此网格上边界价格, "SELL")
                     grid2.订单方向 = "SELL"
                 else:

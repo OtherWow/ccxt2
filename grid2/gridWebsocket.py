@@ -41,11 +41,11 @@ class PublicGridWebSocket:
 def 触发限价单则新增任务队列(data, user: Account, 配对user: Account):
     global 总手续费
     global 总盈亏
-    if data['e'] == 'ORDER_TRADE_UPDATE':
-        总手续费 += float(data['o']['n'])
-        总盈亏 += float(data['o']['rp'])
-        user.手续费 += float(data['o']['n'])
-        user.盈亏 += float(data['o']['rp'])
+    if data['e'] == 'ORDER_TRADE_UPDATE' and float(data['o']['rp']) != 0:
+        总手续费 += round(float(data['o']['n']),7)
+        总盈亏 += round(float(data['o']['rp']),7)
+        user.手续费 += round(float(data['o']['n']),7)
+        user.盈亏 += round(float(data['o']['rp']),7)
         logger.info(f"总手续费：【{总手续费}】，总盈亏：【{总盈亏}】")
     if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol):  # 限价单成交
         if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
@@ -161,6 +161,10 @@ class PrivateGridWebSocket:
                         ba.撤销所有订单(self.user_main_2)
                         ba.撤销所有订单(self.user_hedge_1)
                         ba.撤销所有订单(self.user_hedge_2)
+                        ba.查询账户持仓情况(self.user_main_1)
+                        ba.查询账户持仓情况(self.user_main_2)
+                        ba.查询账户持仓情况(self.user_hedge_1)
+                        ba.查询账户持仓情况(self.user_hedge_2)
                         ba.市价平仓(self.user_main_1)
                         ba.市价平仓(self.user_main_2)
                         ba.市价平仓(self.user_hedge_1)

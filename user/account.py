@@ -140,7 +140,7 @@ class Account(object):
         self.初始化完成 = False
         self.已配对次数 = 0
         self.任务队列 = Queue(self.网格数量 * 2)
-
+        self.补单list=[]
 
 if __name__ == '__main__':
     for i in range(5):
