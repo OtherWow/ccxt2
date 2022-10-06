@@ -16,32 +16,32 @@ def get_main():
     # ====================================网格1参数设置===================================
     user_main = Account("yyn_big")
     # user_main = Account("syb")
-    user_main.symbol = '1000LUNCUSDT'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD   1000LUNCUSDT
-    user_main.websocket_symbol = '1000luncusdt'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd   1000luncusdt
+    user_main.symbol = 'ETHUSDT'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD   1000LUNCUSDT
+    user_main.websocket_symbol = 'ethusdt'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd   1000luncusdt
     user_main.trade_currency = 'USDT'  # 交易货币  USDT  BUSD
     user_main.position_side = 'SHORT'  # 做多 SHORT   LONG
-    user_main.网格区间上限 = 0.43
-    user_main.网格区间下限 = 0.31
-    user_main.网格限价止损价格 = 0.4301
-    user_main.网格市价止损价格 = 0.4301
+    user_main.网格区间上限 = 1960
+    user_main.网格区间下限 = 1360
+    user_main.网格限价止损价格 = 1960.01
+    user_main.网格市价止损价格 = 1960.01
     user_main.网格数量 = 398
-    user_main.单网格数量 = 50
+    user_main.单网格数量 = 0.0067
     return user_main
 
 
 def get_hedge():
     # ====================================网格2参数设置===================================
     user_hedge = Account("yyn_small")
-    user_hedge.symbol = '1000LUNCBUSD'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD  1000LUNCUSDT
-    user_hedge.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd  1000luncusdt
+    user_hedge.symbol = 'ETHBUSD'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD  1000LUNCUSDT
+    user_hedge.websocket_symbol = 'ethbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd  1000luncusdt
     user_hedge.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_hedge.position_side = 'LONG'  # 做空 SHORT   LONG
-    user_hedge.网格区间上限 = 0.31
-    user_hedge.网格区间下限 = 0.19
-    user_hedge.网格限价止损价格 = 0.1899
-    user_hedge.网格市价止损价格 = 0.1899
+    user_hedge.网格区间上限 = 1360
+    user_hedge.网格区间下限 = 760
+    user_hedge.网格限价止损价格 = 759.99
+    user_hedge.网格市价止损价格 = 759.99
     user_hedge.网格数量 = 398
-    user_hedge.单网格数量 = 50
+    user_hedge.单网格数量 = 0.0067
     return user_hedge
 
 
@@ -56,14 +56,14 @@ if __name__ == '__main__':
 
     # ====================================网格3参数设置===================================
     user_main_2 = get_main()
-    user_main_2.symbol = '1000LUNCBUSD'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD  1000LUNCUSDT
-    user_main_2.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd  1000luncusdt
+    user_main_2.symbol = 'ETHBUSD'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD  1000LUNCUSDT
+    user_main_2.websocket_symbol = 'ethbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd  1000luncusdt
     user_main_2.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
 
     # ====================================网格4参数设置===================================
     user_hedge_2 = get_hedge()
-    user_hedge_2.symbol = '1000LUNCUSDT'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD
-    user_hedge_2.websocket_symbol = '1000luncusdt'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
+    user_hedge_2.symbol = 'ETHUSDT'  # 交易对  LUNA2BUSD   ETHUSDT  1000LUNCBUSD   ETHBUSD
+    user_hedge_2.websocket_symbol = 'ethusdt'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd
     user_hedge_2.trade_currency = 'USDT'  # 交易货币  USDT  BUSD
 
     logger.info("开始初始化交易所...")
@@ -74,10 +74,10 @@ if __name__ == '__main__':
     ba.get_token(user_main_2, user_hedge_2)
     ba.获取交易对规则2(user_main_1, user_hedge_1)
     ba.获取交易对规则2(user_main_2, user_hedge_2)
-    user_main_1.交易对价格精度 = 4
-    user_hedge_1.交易对价格精度 = 4
-    user_main_2.交易对价格精度 = 4
-    user_hedge_2.交易对价格精度 = 4
+    # user_main_1.交易对价格精度 = 4
+    # user_hedge_1.交易对价格精度 = 4
+    # user_main_2.交易对价格精度 = 4
+    # user_hedge_2.交易对价格精度 = 4
     logger.info("获取用户token完毕,开始启动公有化线程获取用户交易对信息...")
     pub = PublicGridWebSocket(user_main_1, user_hedge_1)
     pub2 = PublicGridWebSocket(user_main_2, user_hedge_2)

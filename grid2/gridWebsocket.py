@@ -184,7 +184,7 @@ class PrivateGridWebSocket:
             处理任务(self.user_main_2)
             处理任务(self.user_hedge_1)
             处理任务(self.user_hedge_2)
-            time.sleep(0.2)
+            time.sleep(0.06)
 
 
 class Webhooks:
