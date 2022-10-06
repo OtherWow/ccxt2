@@ -1,8 +1,6 @@
 from queue import Queue
 
 
-
-
 class Account(object):
 
     def __init__(self, name):
@@ -49,8 +47,8 @@ class Account(object):
         self.对冲单开单交易簿 = []
         self.马丁补单单号字典 = {}
         self.马丁补单当前索引 = 0
-        self.手续费=0.0
-        self.盈亏=0.0
+        self.手续费 = 0.0
+        self.盈亏 = 0.0
         # 自定义参数
         # ==========================================apiKey=========================================
         if name == "cx":
@@ -140,7 +138,24 @@ class Account(object):
         self.初始化完成 = False
         self.已配对次数 = 0
         self.任务队列 = Queue(self.网格数量 * 2)
-        self.补单list=[]
+        self.补单list = []
+
+        # ==========================================对冲账号参数===================================
+        self.中间价格 = 0.0  # 高于中间价格时做多 低于中间价格时做空
+        self.对冲单数量 = 0.0
+
+        self.做多触发价格 = 0.0
+        self.做多止盈价格 = 0.0
+        self.做多限价止损触发价格 = 0.0
+        self.做多限价止损价格 = 0.0
+        self.做多市价止损价格 = 0.0
+
+        self.做空触发价格 = 0.0
+        self.做空止盈价格 = 0.0
+        self.做空限价止损触发价格 = 0.0
+        self.做空限价止损价格 = 0.0
+        self.做空市价止损价格 = 0.0
+
 
 if __name__ == '__main__':
     for i in range(5):
