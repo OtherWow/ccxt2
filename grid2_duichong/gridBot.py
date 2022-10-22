@@ -322,12 +322,9 @@ def 校验网格(user: Account):
                     else:
                         市价单数量 += grid.此网格数量
                         市价单方向 = "BUY"
-                    ba.限价单(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
-                    grid.订单方向 = "SELL"
+                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user, grid, grid.此网格上边界价格, "SELL"))
                 else:
-                    ba.限价单(user, grid.此网格数量, grid.此网格下边界价格, "BUY")
-                    grid.订单方向 = "BUY"
-                time.sleep(网络间隔)
+                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user, grid, grid.此网格下边界价格, "BUY"))
             elif user.position_side == "SHORT":  # 做空
                 if user.now_price >= grid.此网格上边界价格:
                     if user.position_amt == 0:
@@ -335,18 +332,11 @@ def 校验网格(user: Account):
                     else:
                         市价单数量 += grid.此网格数量
                         市价单方向 = "SELL"
-                    ba.限价单(user, grid.此网格数量, grid.此网格下边界价格, "BUY")
-                    grid.订单方向 = "BUY"
+                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user, grid, grid.此网格下边界价格, "BUY"))
                 else:
-                    ba.限价单(user, grid.此网格数量, grid.此网格上边界价格, "SELL")
-                    grid.订单方向 = "SELL"
-                time.sleep(网络间隔)
+                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user, grid, grid.此网格上边界价格, "SELL"))
             else:
                 logger.info(f"{user.name} 请先设置持仓方向！")
                 return
-            grid.此网格订单号 = str(user.order_info['orderId'])
-            user.order_map[grid.此网格订单号] = grid
-            logger.info(
-                f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}")
     if 市价单数量 != 0:
         ba.市价单(user, 市价单数量, 市价单方向)

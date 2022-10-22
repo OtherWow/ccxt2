@@ -187,6 +187,32 @@ def 市价单(user: Account, num, side):
     logger.info(user.name + "【" + user.symbol + "】市价单下单成功！市价单数量：{:6f}".format(num) + " 市价单价格：{:.6f}".format(
         user.now_price) + "方向：" + 方向)
 
+@logger.catch()
+def 限价单_多线程(user: Account, grid:Grid,price, side):
+    try:
+        order_info = user.exchange.fapiPrivatePostOrder({
+            'symbol': user.symbol,
+            'side': side,
+            'type': 'LIMIT',  # 限价单
+            'quantity': round(grid.此网格数量, user.交易对数量精度),  # 数量
+            'price': round(price, user.交易对价格精度),  # 价格
+            'timestamp': get_timestamp(),
+            'timeInForce': "GTC",
+        })
+        grid.订单方向= side
+        grid.此网格订单号=str(order_info['orderId'])
+        user.限价单订单簿.append(order_info['orderId'])
+        user.order_map[grid.此网格订单号] = grid
+        if side == 'BUY':
+            方向 = "买入"
+        else:
+            方向 = "卖出"
+        logger.info(
+            f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{order_info['price']}，数量：{order_info['origQty']}，方向：{order_info['side']}")
+        time.sleep(0.01)
+    except Exception as e:
+        logger.error(f"{grid.网格名称}挂单失败，价格：{price}，数量：{grid.此网格数量}，方向：{side},重试,错误信息：{e}")
+        Account.executor.submit(lambda p: 限价单_多线程(*p), (user, grid, grid.此网格上边界价格, "SELL"))
 
 @logger.catch()
 def 限价单(user: Account, num, price, side):

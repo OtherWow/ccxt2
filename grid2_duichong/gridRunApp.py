@@ -143,7 +143,7 @@ if __name__ == '__main__':
     #     ba.限价单(user_main_2, 30, 1.804, 'SELL')
     # ba.限价单(user_main_2, 30, 1.804, 'SELL')
     # ba.统计账户挂单详情(user_main_2)
-    gridBot.创建网格4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
+    gridBot.创建网格(user_main_1)
     while True:
         if user_main_1.初始化完成 and (not user_main_1.任务队列.empty()):
             orderid = user_main_1.任务队列.get()

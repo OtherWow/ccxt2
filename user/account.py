@@ -1,8 +1,9 @@
+from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 
 
 class Account(object):
-
+    executor = ThreadPoolExecutor(max_workers=50, thread_name_prefix='挂单线程')
     def __init__(self, name):
         # 项目运行需要的参数
         self.价格保护百分比 = None
@@ -155,6 +156,24 @@ class Account(object):
         self.做空限价止损触发价格 = 0.0
         self.做空限价止损价格 = 0.0
         self.做空市价止损价格 = 0.0
+
+        def 设置做多网格参数(self):
+            self.position_side = 'SHORT'  # 做多 SHORT   LONG
+            self.网格区间上限 = 0.333
+            self.网格区间下限 = 0.253
+            self.网格限价止损价格 = 0.3331
+            self.网格市价止损价格 = 0.3331
+            self.网格数量 = 398
+            self.单网格数量 = 30
+
+        def 设置做空网格参数(self):
+            self.position_side = 'LONG'  # 做空 SHORT   LONG
+            self.网格区间上限 = 0.253
+            self.网格区间下限 = 0.173
+            self.网格限价止损价格 = 0.1729
+            self.网格市价止损价格 = 0.1729
+            self.网格数量 = 398
+            self.单网格数量 = 30
 
 
 if __name__ == '__main__':
