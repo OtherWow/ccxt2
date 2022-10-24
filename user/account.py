@@ -144,6 +144,7 @@ class Account(object):
         # ==========================================对冲账号参数===================================
         self.中间价格 = 0.0  # 高于中间价格时做多 低于中间价格时做空
         self.对冲单数量 = 0.0
+        self.网格已启动 = False
 
         self.做多触发价格 = 0.0
         self.做多止盈价格 = 0.0
@@ -157,23 +158,9 @@ class Account(object):
         self.做空限价止损价格 = 0.0
         self.做空市价止损价格 = 0.0
 
-        def 设置做多网格参数(self):
-            self.position_side = 'SHORT'  # 做多 SHORT   LONG
-            self.网格区间上限 = 0.333
-            self.网格区间下限 = 0.253
-            self.网格限价止损价格 = 0.3331
-            self.网格市价止损价格 = 0.3331
-            self.网格数量 = 398
-            self.单网格数量 = 30
+        self.触发做多订单号=''
+        self.触发做空订单号=''
 
-        def 设置做空网格参数(self):
-            self.position_side = 'LONG'  # 做空 SHORT   LONG
-            self.网格区间上限 = 0.253
-            self.网格区间下限 = 0.173
-            self.网格限价止损价格 = 0.1729
-            self.网格市价止损价格 = 0.1729
-            self.网格数量 = 398
-            self.单网格数量 = 30
 
 
 if __name__ == '__main__':

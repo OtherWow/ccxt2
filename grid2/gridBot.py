@@ -233,6 +233,7 @@ def 校验网格2(user_main: Account, user_hedge: Account):
                 if user_hedge.now_price >= grid2.此网格上边界价格:
                     if user_hedge.position_amt == 0:
                         ba.市价单(user_hedge, grid2.此网格数量, "SELL")
+                        ba.查询账户持仓情况(user_hedge)
                     else:
                         hedge_市价单数量 += grid2.此网格数量
                         hedge_市价单方向 = "SELL"
@@ -243,6 +244,7 @@ def 校验网格2(user_main: Account, user_hedge: Account):
                 if user_main.now_price >= grid.此网格上边界价格:
                     if user_main.position_amt == 0:
                         ba.市价单(user_main, grid.此网格数量, "SELL")
+                        ba.查询账户持仓情况(user_main)
                     else:
                         main_市价单数量 += grid.此网格数量
                         main_市价单方向 = "SELL"

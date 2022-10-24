@@ -15,36 +15,23 @@ class Grid(object):
         self.订单方向 = ""
 
 
-def 创建网格4(user_main_1: Account, user_hedge_1: Account, user_main_2: Account, user_hedge_2: Account):
+def 创建网格4(user_main_1: Account, user_main_2: Account):
     ba.撤销所有订单(user_main_1)
     ba.撤销所有订单(user_main_2)
-    ba.撤销所有订单(user_hedge_1)
-    ba.撤销所有订单(user_hedge_2)
     ba.查询账户持仓情况(user_main_1)
     ba.查询账户持仓情况(user_main_2)
-    ba.查询账户持仓情况(user_hedge_1)
-    ba.查询账户持仓情况(user_hedge_2)
     ba.市价平仓(user_main_1)
     ba.市价平仓(user_main_2)
-    ba.市价平仓(user_hedge_1)
-    ba.市价平仓(user_hedge_2)
     ba.查询账户持仓情况(user_main_1)
     ba.查询账户持仓情况(user_main_2)
-    ba.查询账户持仓情况(user_hedge_1)
-    ba.查询账户持仓情况(user_hedge_2)
     if user_main_1.position_amt != 0:
         logger.info(f"{user_main_1.name}账户有持仓，无法创建网格")
         return
     if user_main_2.position_amt != 0:
         logger.info(f"{user_main_2.name}账户有持仓，无法创建网格")
         return
-    if user_hedge_1.position_amt != 0:
-        logger.info(f"{user_hedge_1.name}账户有持仓，无法创建网格")
-        return
-    if user_hedge_2.position_amt != 0:
-        logger.info(f"{user_hedge_2.name}账户有持仓，无法创建网格")
-        return
-    网格初始化4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
+
+    网格初始化4(user_main_1,user_main_2)
     if user_main_1.position_side == "LONG":  # 做多
         触发价 = user_main_1.网格限价止损价格 / (1 - user_main_1.价格保护百分比 / 2)
         数量 = user_main_1.网格数量 * user_main_1.单网格数量 / 2
@@ -52,13 +39,6 @@ def 创建网格4(user_main_1: Account, user_hedge_1: Account, user_main_2: Acco
         ba.市价止损单(user_main_1, user_main_1.网格市价止损价格)
         # ba.限价止损单自填数量(user_main_2, 触发价, user_main_2.网格限价止损价格, 数量)
         ba.市价止损单(user_main_2, user_main_2.网格市价止损价格)
-
-        触发价 = user_hedge_1.网格限价止损价格 / (1 + user_hedge_1.价格保护百分比 / 2)
-        数量 = user_hedge_1.网格数量 * user_hedge_1.单网格数量 / 2
-        # ba.限价止损单自填数量(user_hedge_1, 触发价, user_hedge_1.网格限价止损价格, 数量)
-        ba.市价止损单(user_hedge_1, user_hedge_1.网格区间上限)
-        # ba.限价止损单自填数量(user_hedge_2, 触发价, user_hedge_2.网格限价止损价格, 数量)
-        ba.市价止损单(user_hedge_2, user_hedge_2.网格区间上限)
 
     elif user_main_1.position_side == "SHORT":  # 做空
         触发价 = user_main_1.网格限价止损价格 / (1 + user_main_1.价格保护百分比 / 2)
@@ -68,29 +48,17 @@ def 创建网格4(user_main_1: Account, user_hedge_1: Account, user_main_2: Acco
         # ba.限价止损单自填数量(user_main_2, 触发价, user_main_2.网格限价止损价格, 数量)
         ba.市价止损单(user_main_2, user_main_2.网格区间上限)
 
-        触发价 = user_hedge_1.网格限价止损价格 / (1 - user_hedge_1.价格保护百分比 / 2)
-        数量 = user_hedge_1.网格数量 * user_hedge_1.单网格数量 / 2
-        # ba.限价止损单自填数量(user_hedge_1, 触发价, user_hedge_1.网格限价止损价格, 数量)
-        ba.市价止损单(user_hedge_1, user_hedge_1.网格市价止损价格)
-        # ba.限价止损单自填数量(user_hedge_2, 触发价, user_hedge_2.网格限价止损价格, 数量)
-        ba.市价止损单(user_hedge_2, user_hedge_2.网格市价止损价格)
 
     logger.info(
         f"{user_main_1.name}创建网格成功，网格区间【{user_main_1.网格区间下限}，{user_main_1.网格区间上限}】，网格数量{user_main_1.网格数量}，单网格数量{user_main_1.单网格数量}，网格限价止损价格{user_main_1.网格限价止损价格}，网格市价止损价格{user_main_1.网格市价止损价格}")
-    logger.info(
-        f"{user_hedge_1.name}创建网格成功，网格区间【{user_hedge_1.网格区间下限}，{user_hedge_1.网格区间上限}】，网格数量{user_hedge_1.网格数量}，单网格数量{user_hedge_1.单网格数量}，网格限价止损价格{user_hedge_1.网格限价止损价格}，网格市价止损价格{user_hedge_1.网格市价止损价格}")
     return
 
 
-def 网格初始化4(user_main_1: Account, user_hedge_1: Account, user_main_2: Account, user_hedge_2: Account):
+def 网格初始化4(user_main_1: Account, user_main_2: Account):
     user_main_1.grid_list.clear()
     user_main_2.grid_list.clear()
-    user_hedge_1.grid_list.clear()
-    user_hedge_2.grid_list.clear()
     user_main_1.order_map.clear()
     user_main_2.order_map.clear()
-    user_hedge_1.order_map.clear()
-    user_hedge_2.order_map.clear()
     网格价格范围 = (user_main_1.网格区间上限 - user_main_1.网格区间下限) / user_main_1.网格数量
     当前下边界价格 = user_main_1.网格区间下限
     for i in range(user_main_1.网格数量):
@@ -106,117 +74,25 @@ def 网格初始化4(user_main_1: Account, user_hedge_1: Account, user_main_2: A
             grid.网格名称 = f"{user_main_1.name}网格{i}【{user_main_2.symbol}】"
             user_main_2.grid_list.append(grid)
 
-    网格价格范围 = (user_hedge_1.网格区间上限 - user_hedge_1.网格区间下限) / user_hedge_1.网格数量
-    当前下边界价格 = user_hedge_1.网格区间下限
-    for i in range(user_hedge_1.网格数量):
-        grid = Grid()
-        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
-        grid.此网格下边界价格 = 当前下边界价格
-        grid.此网格数量 = user_hedge_1.单网格数量
-        当前下边界价格 = 当前下边界价格 + 网格价格范围
-        if i <= (user_hedge_1.网格数量 / 2 - 1):
-            grid.网格名称 = f"{user_hedge_1.name}网格{i}【{user_hedge_1.symbol}】"
-            user_hedge_1.grid_list.append(grid)
-        else:
-            grid.网格名称 = f"{user_hedge_1.name}网格{i}【{user_hedge_2.symbol}】"
-            user_hedge_2.grid_list.append(grid)
-
-    校验网格2(user_main_1, user_hedge_1)
-    校验网格2(user_main_2, user_hedge_2)
+    校验网格2(user_main_1)
+    校验网格2(user_main_2)
     user_main_1.初始化完成 = True
     user_main_2.初始化完成 = True
-    user_hedge_1.初始化完成 = True
-    user_hedge_2.初始化完成 = True
     return
 
 
-def 创建网格2(user_main: Account, user_hedge: Account):
-    ba.撤销所有订单(user_main)
-    ba.撤销所有订单(user_hedge)
-    ba.市价平仓(user_main)
-    ba.市价平仓(user_hedge)
-    ba.查询账户持仓情况(user_main)
-    ba.查询账户持仓情况(user_hedge)
-    if user_main.position_amt != 0:
-        logger.info(f"{user_main.name}账户有持仓，无法创建网格")
-        return
-    if user_hedge.position_amt != 0:
-        logger.info(f"{user_hedge.name}账户有持仓，无法创建网格")
-        return
-
-    网格初始化2(user_main, user_hedge)
-    if user_main.position_side == "LONG":  # 做多
-        触发价 = user_main.网格限价止损价格 / (1 - user_main.价格保护百分比 / 2)
-        数量 = user_main.网格数量 * user_main.单网格数量
-        ba.限价止损单自填数量(user_main, 触发价, user_main.网格限价止损价格, 数量)
-        ba.市价止损单(user_main, user_main.网格市价止损价格)
-
-        触发价 = user_hedge.网格限价止损价格 / (1 + user_hedge.价格保护百分比 / 2)
-        数量 = user_hedge.网格数量 * user_hedge.单网格数量
-        ba.限价止损单自填数量(user_hedge, 触发价, user_hedge.网格限价止损价格, 数量)
-        ba.市价止损单(user_hedge, user_hedge.网格区间上限)
-
-    elif user_main.position_side == "SHORT":  # 做空
-        触发价 = user_main.网格限价止损价格 / (1 + user_main.价格保护百分比 / 2)
-        数量 = user_main.网格数量 * user_main.单网格数量
-        ba.限价止损单自填数量(user_main, 触发价, user_main.网格限价止损价格, 数量)
-        ba.市价止损单(user_main, user_main.网格区间上限)
-
-        触发价 = user_hedge.网格限价止损价格 / (1 - user_hedge.价格保护百分比 / 2)
-        数量 = user_hedge.网格数量 * user_hedge.单网格数量
-        ba.限价止损单自填数量(user_hedge, 触发价, user_hedge.网格限价止损价格, 数量)
-        ba.市价止损单(user_hedge, user_hedge.网格市价止损价格)
-
-    logger.info(
-        f"{user_main.name}创建网格成功，网格区间【{user_main.网格区间下限}，{user_main.网格区间上限}】，网格数量{user_main.网格数量}，单网格数量{user_main.单网格数量}，网格限价止损价格{user_main.网格限价止损价格}，网格市价止损价格{user_main.网格市价止损价格}")
-    logger.info(
-        f"{user_hedge.name}创建网格成功，网格区间【{user_hedge.网格区间下限}，{user_hedge.网格区间上限}】，网格数量{user_hedge.网格数量}，单网格数量{user_hedge.单网格数量}，网格限价止损价格{user_hedge.网格限价止损价格}，网格市价止损价格{user_hedge.网格市价止损价格}")
-    return
 
 
-def 网格初始化2(user_main: Account, user_hedge: Account):
-    user_main.grid_list.clear()
-    user_hedge.grid_list.clear()
-    user_main.order_map.clear()
-    user_hedge.order_map.clear()
-    网格价格范围 = round((user_main.网格区间上限 - user_main.网格区间下限) / user_main.网格数量, user_main.交易对价格精度)
-    当前下边界价格 = round(user_main.网格区间下限, user_main.交易对价格精度)
-    for i in range(user_main.网格数量):
-        grid = Grid()
-        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
-        grid.此网格下边界价格 = 当前下边界价格
-        grid.此网格数量 = user_main.单网格数量
-        grid.网格名称 = f"{user_main.name}网格{i}"
-        当前下边界价格 = 当前下边界价格 + 网格价格范围
-        user_main.grid_list.append(grid)
-
-    网格价格范围 = round((user_hedge.网格区间上限 - user_hedge.网格区间下限) / user_hedge.网格数量, user_hedge.交易对价格精度)
-    当前下边界价格 = user_hedge.网格区间下限
-    for i in range(user_hedge.网格数量):
-        grid = Grid()
-        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
-        grid.此网格下边界价格 = 当前下边界价格
-        grid.此网格数量 = user_hedge.单网格数量
-        grid.网格名称 = f"{user_hedge.name}网格{i}"
-        当前下边界价格 = 当前下边界价格 + 网格价格范围
-        user_hedge.grid_list.append(grid)
-    校验网格2(user_main, user_hedge)
-    user_main.初始化完成 = True
-    user_hedge.初始化完成 = True
-    return
 
 
-def 校验网格2(user_main: Account, user_hedge: Account):
+
+
+def 校验网格2(user_main: Account):
     main_市价单方向 = ""
-    hedge_市价单方向 = ""
     main_市价单数量 = 0
-    hedge_市价单数量 = 0
-    网络间隔 = 0.03
-
     for i in range(0, len(user_main.grid_list)):
         time.sleep(0.05)
         grid = user_main.grid_list[i]
-        grid2 = user_hedge.grid_list[i]
         if grid.此网格订单号 == "":
             if user_main.position_side == "LONG":  # 做多
                 if user_main.now_price <= grid.此网格下边界价格:
@@ -226,117 +102,25 @@ def 校验网格2(user_main: Account, user_hedge: Account):
                     else:
                         main_市价单数量 += grid.此网格数量
                         main_市价单方向 = "BUY"
-
                     Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user_main, grid, grid.此网格上边界价格, "SELL"))
                 else:
                     Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user_main, grid, grid.此网格下边界价格, "BUY"))
-                if user_hedge.now_price >= grid2.此网格上边界价格:
-                    if user_hedge.position_amt == 0:
-                        ba.市价单(user_hedge, grid2.此网格数量, "SELL")
-                    else:
-                        hedge_市价单数量 += grid2.此网格数量
-                        hedge_市价单方向 = "SELL"
-                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user_hedge, grid2, grid2.此网格下边界价格, "BUY"))
-                else:
-                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user_hedge, grid2, grid2.此网格上边界价格, "SELL"))
             elif user_main.position_side == "SHORT":  # 做空
                 if user_main.now_price >= grid.此网格上边界价格:
                     if user_main.position_amt == 0:
                         ba.市价单(user_main, grid.此网格数量, "SELL")
+                        ba.查询账户持仓情况(user_main)
                     else:
                         main_市价单数量 += grid.此网格数量
                         main_市价单方向 = "SELL"
                     Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user_main, grid, grid.此网格下边界价格, "BUY"))
                 else:
                     Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user_main, grid, grid.此网格上边界价格, "SELL"))
-                if user_hedge.now_price <= grid2.此网格下边界价格:
-                    if user_hedge.position_amt == 0:
-                        ba.市价单(user_hedge, grid2.此网格数量, "BUY")
-                        ba.查询账户持仓情况(user_hedge)
-                    else:
-                        hedge_市价单数量 += grid2.此网格数量
-                        hedge_市价单方向 = "BUY"
-                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user_hedge, grid2, grid2.此网格上边界价格, "SELL"))
-                else:
-                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user_hedge, grid2, grid2.此网格下边界价格, "BUY"))
             else:
                 logger.info(f"{user_main.name} 请先设置持仓方向！")
                 return
     if main_市价单数量 != 0:
         ba.市价单(user_main, main_市价单数量, main_市价单方向)
-    if hedge_市价单数量 != 0:
-        ba.市价单(user_hedge, hedge_市价单数量, hedge_市价单方向)
 
 
-def 创建网格(user: Account):
-    ba.撤销所有订单(user)
-    ba.查询账户持仓情况(user)
-    if user.position_amt != 0:
-        logger.info(f"{user.name}账户有持仓，无法创建网格")
-        return
-    网格初始化(user)
-    if user.position_side == "LONG":  # 做多
-        触发价 = user.网格限价止损价格 / (1 - user.价格保护百分比 / 2)
-        数量 = user.网格数量 * user.单网格数量
-        ba.限价止损单自填数量(user, 触发价, user.网格限价止损价格, 数量)
-        ba.市价止损单(user, user.网格市价止损价格)
-    elif user.position_side == "SHORT":  # 做空
-        触发价 = user.网格限价止损价格 / (1 + user.价格保护百分比 / 2)
-        数量 = user.网格数量 * user.单网格数量
-        ba.限价止损单自填数量(user, 触发价, user.网格限价止损价格, 数量)
-        ba.市价止损单(user, user.网格区间上限)
-    logger.info(
-        f"{user.name}创建网格成功，网格区间【{user.网格区间下限}，{user.网格区间上限}】，网格数量{user.网格数量}，单网格数量{user.单网格数量}，网格限价止损价格{user.网格限价止损价格}，网格市价止损价格{user.网格市价止损价格}")
-    return
 
-
-def 网格初始化(user: Account):
-    user.grid_list.clear()
-    user.order_map.clear()
-    网格价格范围 = (user.网格区间上限 - user.网格区间下限) / user.网格数量
-    当前下边界价格 = user.网格区间下限
-    for i in range(user.网格数量):
-        grid = Grid()
-        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
-        grid.此网格下边界价格 = 当前下边界价格
-        grid.此网格数量 = user.单网格数量
-        grid.网格名称 = f"{user.name}网格{i}"
-        当前下边界价格 = 当前下边界价格 + 网格价格范围
-        user.grid_list.append(grid)
-    校验网格(user)
-    user.初始化完成 = True
-    return
-
-
-def 校验网格(user: Account):
-    市价单方向 = ""
-    市价单数量 = 0
-    网络间隔 = 0.03
-    for grid in user.grid_list:
-        if grid.此网格订单号 == "":
-            if user.position_side == "LONG":  # 做多
-                if user.now_price <= grid.此网格下边界价格:
-                    if user.position_amt == 0:
-                        ba.市价单(user, grid.此网格数量, "BUY")
-                        ba.查询账户持仓情况(user)
-                    else:
-                        市价单数量 += grid.此网格数量
-                        市价单方向 = "BUY"
-                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user, grid, grid.此网格上边界价格, "SELL"))
-                else:
-                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user, grid, grid.此网格下边界价格, "BUY"))
-            elif user.position_side == "SHORT":  # 做空
-                if user.now_price >= grid.此网格上边界价格:
-                    if user.position_amt == 0:
-                        ba.市价单(user, grid.此网格数量, "SELL")
-                    else:
-                        市价单数量 += grid.此网格数量
-                        市价单方向 = "SELL"
-                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user, grid, grid.此网格下边界价格, "BUY"))
-                else:
-                    Account.executor.submit(lambda p: ba.限价单_多线程(*p), (user, grid, grid.此网格上边界价格, "SELL"))
-            else:
-                logger.info(f"{user.name} 请先设置持仓方向！")
-                return
-    if 市价单数量 != 0:
-        ba.市价单(user, 市价单数量, 市价单方向)

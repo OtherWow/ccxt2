@@ -7,28 +7,46 @@ from urllib.parse import unquote
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from user.account import Account
 from binance import binance as ba
+from gridBot import 创建网格4
 
 总手续费 = 0
 总盈亏 = 0
 
 
 class PublicGridWebSocket:
-    def __init__(self, user_main: Account, user_hedge: Account):
+    def __init__(self, user_main_1: Account, user_main_2: Account):
         self.ws = None
-        self.user_main = user_main
-        self.user_hedge = user_hedge
+        self.user_main_1 = user_main_1
+        self.user_main_2 = user_main_2
+        self.设置做多网格参数()
         logger.debug("PublicGridWebSocket初始化成功")
 
     def on_message(self, ws, message):
         data = json.loads(message)
-        self.user_main.now_price = float(data['p'])
-        self.user_hedge.now_price = float(data['p'])
+        self.user_main_1.now_price = float(data['p'])
+        self.user_main_2.now_price = float(data['p'])
+        if self.user_main_1.now_price > self.user_main_1.中间价格 and self.user_main_1.position_side == 'SHORT' and self.user_main_1.触发做多订单号 == '':
+            self.设置做多网格参数()
+            ba.限价单(self.user_main_1, self.user_main_1.单网格数量,self.user_main_1.做多触发价格, "SELL")
+            self.user_main_1.触发做多订单号 = str(self.user_main_1.order_info['orderId'])
+        if self.user_main_1.now_price < self.user_main_1.中间价格 and self.user_main_1.position_side == 'LONG' and self.user_main_1.触发做空订单号 == '':
+            self.设置做空网格参数()
+            ba.限价单(self.user_main_1, self.user_main_1.单网格数量,self.user_main_1.做空触发价格, "BUY")
+            self.user_main_1.触发做空订单号 = str(self.user_main_1.order_info['orderId'])
+        # if self.user_main_1.网格已启动 is not True and self.user_main_1.now_price>=self.user_main_1.做多触发价格:
+        #     self.user_main_1.网格已启动 = True
+        #     self.user_main_1.初始化完成 = False
+        #     创建网格4(self.user_main_1,self.user_main_2)
+        # if self.user_main_1.网格已启动 is not True and self.user_main_1.now_price <= self.user_main_1.做空触发价格:
+        #     self.user_main_1.初始化完成 = False
+        #     self.user_main_1.网格已启动 = True
+        #     创建网格4(self.user_main_1, self.user_main_2)
 
     def on_ping(self, message, data):
         return
 
     def run(self):
-        threading.Thread(target=self.public_ws_run, args={self.user_main}).start()
+        threading.Thread(target=self.public_ws_run, args={self.user_main_1}).start()
 
     def public_ws_run(self, user_main):
         websocket.enableTrace(True)
@@ -37,8 +55,34 @@ class PublicGridWebSocket:
                                          on_ping=self.on_ping)
         self.ws.run_forever(sslopt={"check_hostname": False})
 
+    def 设置做多网格参数(self):
+        self.user_main_1.position_side = 'LONG'  # 做多 SHORT   LONG
+        self.user_main_1.网格区间上限 = 0.31
+        self.user_main_1.网格区间下限 = 0.23
+        self.user_main_1.网格限价止损价格 = 0.2299
+        self.user_main_1.网格市价止损价格 = 0.2299
 
-def 触发限价单则新增任务队列(data, user: Account, 配对user: Account, user_main: Account, user_hedge: Account):
+        self.user_main_2.position_side = self.user_main_1.position_side
+        self.user_main_2.网格区间上限 = self.user_main_1.网格区间上限
+        self.user_main_2.网格区间下限 = self.user_main_1.网格区间下限
+        self.user_main_2.网格限价止损价格 = self.user_main_1.网格限价止损价格
+        self.user_main_2.网格市价止损价格 = self.user_main_1.网格市价止损价格
+
+    def 设置做空网格参数(self):
+        self.user_main_1.position_side = 'SHORT'  # 做空 SHORT   LONG
+        self.user_main_1.网格区间上限 = 0.23
+        self.user_main_1.网格区间下限 = 0.15
+        self.user_main_1.网格限价止损价格 = 0.2301
+        self.user_main_1.网格市价止损价格 = 0.2301
+
+        self.user_main_2.position_side = self.user_main_1.position_side
+        self.user_main_2.网格区间上限 = self.user_main_1.网格区间上限
+        self.user_main_2.网格区间下限 = self.user_main_1.网格区间下限
+        self.user_main_2.网格限价止损价格 = self.user_main_1.网格限价止损价格
+        self.user_main_2.网格市价止损价格 = self.user_main_1.网格市价止损价格
+
+
+def 触发限价单则新增任务队列(data, user: Account, 配对user: Account, user_main: Account, user_main2: Account):
     global 总手续费
     global 总盈亏
     if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol) and float(data['o']['rp']) != 0:
@@ -48,30 +92,33 @@ def 触发限价单则新增任务队列(data, user: Account, 配对user: Accoun
         user.盈亏 += round(float(data['o']['rp']), 7)
         logger.info(f"总手续费：【{总手续费}】，总盈亏：【{总盈亏}】")
     if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol):  # 限价单成交
-        if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
-            配对user.已配对次数 += 1
-        logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，手续费：【{user.手续费}】，盈亏：【{user.盈亏}】，成交价格：{data['o']['p']}，成交数量：{data['o']['z']}，成交方向：{data['o']['S']}。{user_main.name}已配对【{user_main.已配对次数}】次,{user_hedge.name}已配对【{user_hedge.已配对次数}】次")
-        user.任务队列.put(str(data['o']['i']))
+        if user_main.触发做空订单号 == str(data['o']['i']) or user_main.触发做多订单号 == str(data['o']['i']):
+            logger.info(f"触发网格开单：【{data}】")
+            user_main.触发做空订单号 = ''
+            user_main.触发做多订单号 = ''
+            user_main.网格已启动 = False
+            user_main.初始化完成 = False
+            user_main.网格已启动 = True
+            创建网格4(user_main, user_main2)
+        else:
+            if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
+                配对user.已配对次数 += 1
+            logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，手续费：【{user.手续费}】，盈亏：【{user.盈亏}】，成交价格：{data['o']['p']}，成交数量：{data['o']['z']}，成交方向：{data['o']['S']}。{user_main.name}已配对【{user_main.已配对次数}】次")
+            user.任务队列.put(str(data['o']['i']))
         return
 
 
 class PrivateGridWebSocket:
-    def __init__(self, user_main_1: Account, user_hedge_1: Account, user_main_2: Account, user_hedge_2: Account):
+    def __init__(self, user_main_1: Account, user_main_2: Account, ):
         self.num = None
         self.ws1 = None
         self.ws1_1 = None
-        self.ws2 = None
-        self.ws2_2 = None
         self.user_main_1 = user_main_1
         self.user_main_2 = user_main_2
-        self.user_hedge_1 = user_hedge_1
-        self.user_hedge_2 = user_hedge_2
 
     def run(self):
         threading.Thread(target=self.private_ws1).start()
         threading.Thread(target=self.private_ws1_1).start()
-        threading.Thread(target=self.private_ws2).start()
-        threading.Thread(target=self.private_ws2_2).start()
 
     def private_ws1(self):
         websocket.enableTrace(True)
@@ -79,43 +126,21 @@ class PrivateGridWebSocket:
                                           on_message=self.ws1_message)
         self.ws1.run_forever(sslopt={"check_hostname": False})
 
-    def private_ws2(self):
-        websocket.enableTrace(True)
-        self.ws2 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_hedge_2.listen_key,
-                                          on_message=self.ws2_message)
-        self.ws2.run_forever(sslopt={"check_hostname": False})
-
     def private_ws1_1(self):
         websocket.enableTrace(True)
         self.ws1_1 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_main_2.listen_key,
                                             on_message=self.ws1_1_message)
         self.ws1_1.run_forever(sslopt={"check_hostname": False})
 
-    def private_ws2_2(self):
-        websocket.enableTrace(True)
-        self.ws2_2 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_hedge_2.listen_key,
-                                            on_message=self.ws2_2_message)
-        self.ws2_2.run_forever(sslopt={"check_hostname": False})
-
     def ws1_message(self, ws, message):
         data = json.loads(message)
         self.如果仓位为0且满足条件则全部平仓(data, self.user_main_1)
-        触发限价单则新增任务队列(data, self.user_main_1, self.user_main_1, self.user_main_1, self.user_hedge_1)
+        触发限价单则新增任务队列(data, self.user_main_1, self.user_main_1, self.user_main_1, self.user_main_2)
 
     def ws1_1_message(self, ws, message):
         data = json.loads(message)
         self.如果仓位为0且满足条件则全部平仓(data, self.user_main_2)
-        触发限价单则新增任务队列(data, self.user_main_2, self.user_main_1, self.user_main_1, self.user_hedge_1)
-
-    def ws2_message(self, ws, message):
-        data = json.loads(message)
-        self.如果仓位为0且满足条件则全部平仓(data, self.user_hedge_1)
-        触发限价单则新增任务队列(data, self.user_hedge_1, self.user_hedge_1, self.user_main_1, self.user_hedge_1)
-
-    def ws2_2_message(self, ws, message):
-        data = json.loads(message)
-        self.如果仓位为0且满足条件则全部平仓(data, self.user_hedge_2)
-        触发限价单则新增任务队列(data, self.user_hedge_2, self.user_hedge_1, self.user_main_1, self.user_hedge_1)
+        触发限价单则新增任务队列(data, self.user_main_2, self.user_main_1, self.user_main_1, self.user_main_2)
 
     def 如果仓位为0且满足条件则全部平仓(self, data, user: Account):
         if data['e'] == 'ACCOUNT_UPDATE':
@@ -129,20 +154,12 @@ class PrivateGridWebSocket:
                         logger.info(user.name + "账户【" + user.symbol + "】仓位变更为【0】,撤销所有订单,然后平仓")
                         ba.撤销所有订单(self.user_main_1)
                         ba.撤销所有订单(self.user_main_2)
-                        ba.撤销所有订单(self.user_hedge_1)
-                        ba.撤销所有订单(self.user_hedge_2)
                         ba.查询账户持仓情况(self.user_main_1)
                         ba.查询账户持仓情况(self.user_main_2)
-                        ba.查询账户持仓情况(self.user_hedge_1)
-                        ba.查询账户持仓情况(self.user_hedge_2)
                         ba.市价平仓(self.user_main_1)
                         ba.市价平仓(self.user_main_2)
-                        ba.市价平仓(self.user_hedge_1)
-                        ba.市价平仓(self.user_hedge_2)
                         ba.查询账户持仓情况(self.user_main_1)
                         ba.查询账户持仓情况(self.user_main_2)
-                        ba.查询账户持仓情况(self.user_hedge_1)
-                        ba.查询账户持仓情况(self.user_hedge_2)
                     return
 
     def on_ping(self, message, data):
@@ -153,11 +170,9 @@ class Webhooks:
     user1 = None
     user2 = None
 
-    def __init__(self, user_main: Account, user_hedge: Account):
+    def __init__(self, user_main: Account, ):
         self.user_main = user_main
-        self.user_hedge = user_hedge
         Webhooks.user1 = user_main
-        Webhooks.user2 = user_hedge
 
     def init_webhooks(self):
         addr = ('', self.user_main.port)
