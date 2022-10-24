@@ -80,6 +80,31 @@ def 网格初始化4(user_main_1: Account, user_main_2: Account):
     user_main_2.初始化完成 = True
     return
 
+def 网格初始化3(user_main_1: Account, user_main_2: Account):
+    user_main_1.grid_list.clear()
+    user_main_2.grid_list.clear()
+    user_main_1.order_map.clear()
+    user_main_2.order_map.clear()
+    网格价格范围 = (user_main_1.网格区间上限 - user_main_1.网格区间下限) / user_main_1.网格数量
+    当前下边界价格 = user_main_1.网格区间下限
+    for i in range(user_main_1.网格数量):
+        grid = Grid()
+        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
+        grid.此网格下边界价格 = 当前下边界价格
+        grid.此网格数量 = user_main_1.单网格数量
+        当前下边界价格 = 当前下边界价格 + 网格价格范围
+        if i <= (user_main_1.网格数量 / 2 - 1):
+            grid.网格名称 = f"{user_main_1.name}网格{i}【{user_main_1.symbol}】"
+            user_main_1.grid_list.append(grid)
+        else:
+            grid.网格名称 = f"{user_main_1.name}网格{i}【{user_main_2.symbol}】"
+            user_main_2.grid_list.append(grid)
+
+    校验网格2(user_main_1)
+    校验网格2(user_main_2)
+    user_main_1.初始化完成 = True
+    user_main_2.初始化完成 = True
+    return
 
 
 

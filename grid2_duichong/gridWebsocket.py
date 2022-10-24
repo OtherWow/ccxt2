@@ -25,14 +25,14 @@ class PublicGridWebSocket:
         data = json.loads(message)
         self.user_main_1.now_price = float(data['p'])
         self.user_main_2.now_price = float(data['p'])
-        if self.user_main_1.now_price > self.user_main_1.中间价格 and self.user_main_1.position_side == 'SHORT' and self.user_main_1.触发做多订单号 == '':
+        if self.user_main_1.now_price > self.user_main_1.中间价格 and self.user_main_1.网格已启动 is not True and self.user_main_1.触发做多订单号 == '':
             self.设置做多网格参数()
             ba.限价单(self.user_main_1, self.user_main_1.单网格数量,self.user_main_1.做多触发价格, "SELL")
             self.user_main_1.触发做多订单号 = str(self.user_main_1.order_info['orderId'])
-        if self.user_main_1.now_price < self.user_main_1.中间价格 and self.user_main_1.position_side == 'LONG' and self.user_main_1.触发做空订单号 == '':
-            self.设置做空网格参数()
-            ba.限价单(self.user_main_1, self.user_main_1.单网格数量,self.user_main_1.做空触发价格, "BUY")
-            self.user_main_1.触发做空订单号 = str(self.user_main_1.order_info['orderId'])
+        # if self.user_main_1.now_price < self.user_main_1.中间价格 and self.user_main_1.position_side == 'LONG' and self.user_main_1.触发做空订单号 == '':
+        #     self.设置做空网格参数()
+            # ba.限价单(self.user_main_1, self.user_main_1.单网格数量,self.user_main_1.做空触发价格, "BUY")
+            # self.user_main_1.触发做空订单号 = str(self.user_main_1.order_info['orderId'])
         # if self.user_main_1.网格已启动 is not True and self.user_main_1.now_price>=self.user_main_1.做多触发价格:
         #     self.user_main_1.网格已启动 = True
         #     self.user_main_1.初始化完成 = False
@@ -57,10 +57,10 @@ class PublicGridWebSocket:
 
     def 设置做多网格参数(self):
         self.user_main_1.position_side = 'LONG'  # 做多 SHORT   LONG
-        self.user_main_1.网格区间上限 = 0.31
-        self.user_main_1.网格区间下限 = 0.23
-        self.user_main_1.网格限价止损价格 = 0.2299
-        self.user_main_1.网格市价止损价格 = 0.2299
+        self.user_main_1.网格区间上限 = 0.4
+        self.user_main_1.网格区间下限 = 0.24
+        self.user_main_1.网格限价止损价格 = 0.2399
+        self.user_main_1.网格市价止损价格 = 0.2399
 
         self.user_main_2.position_side = self.user_main_1.position_side
         self.user_main_2.网格区间上限 = self.user_main_1.网格区间上限
@@ -92,11 +92,11 @@ def 触发限价单则新增任务队列(data, user: Account, 配对user: Accoun
         user.盈亏 += round(float(data['o']['rp']), 7)
         logger.info(f"总手续费：【{总手续费}】，总盈亏：【{总盈亏}】")
     if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol):  # 限价单成交
-        if user_main.触发做空订单号 == str(data['o']['i']) or user_main.触发做多订单号 == str(data['o']['i']):
+        # if user_main.触发做空订单号 == str(data['o']['i']) or user_main.触发做多订单号 == str(data['o']['i']):
+        if  user_main.触发做多订单号 == str(data['o']['i']):
             logger.info(f"触发网格开单：【{data}】")
             user_main.触发做空订单号 = ''
             user_main.触发做多订单号 = ''
-            user_main.网格已启动 = False
             user_main.初始化完成 = False
             user_main.网格已启动 = True
             创建网格4(user_main, user_main2)
@@ -160,6 +160,8 @@ class PrivateGridWebSocket:
                         ba.市价平仓(self.user_main_2)
                         ba.查询账户持仓情况(self.user_main_1)
                         ba.查询账户持仓情况(self.user_main_2)
+                        user.网格已启动 = False
+                        user.初始化完成 = False
                     return
 
     def on_ping(self, message, data):

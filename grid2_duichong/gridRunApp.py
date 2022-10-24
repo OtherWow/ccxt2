@@ -24,9 +24,9 @@ def get_main():
     user_main.网格数量 = 398
     user_main.单网格数量 = 50
 
-    user_main.做多触发价格 = 0.24
+    user_main.做多触发价格 = 0.26
     user_main.中间价格=0.23
-    user_main.做空触发价格 = 0.22
+    user_main.做空触发价格 = 0.002
     return user_main
 
 
@@ -35,7 +35,7 @@ def get_main():
 def 处理任务(user: Account, orderId):
     logger.info(user.name + f"【{user.symbol}】任务队列不为空，开始处理任务")
     if orderId in user.order_map:
-        grid = user.order_map[orderId]
+        grid = user.order_map.get(orderId)
         del user.order_map[orderId]
         grid.此网格订单号 = ""
         try:
@@ -43,7 +43,6 @@ def 处理任务(user: Account, orderId):
                 ba.限价单抛异常(user, grid.此网格数量, grid.此网格下边界价格, "BUY", grid)
             else:
                 ba.限价单抛异常(user, grid.此网格数量, grid.此网格上边界价格, "SELL", grid)
-            user.order_map[grid.此网格订单号] = grid
             logger.info(f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}")  # ，已配对次数：【{user.已配对次数}】
         except:
             logger.exception(f"{grid.网格名称} 处理任务失败! 准备重试！")
@@ -55,6 +54,8 @@ def 处理任务(user: Account, orderId):
             user.order_map[grid.此网格订单号] = grid
             user.任务队列.put(orderId)
         return
+    else:
+        logger.info(f"订单号{orderId} 异常 没有匹配到对应的订单号！")
 
 
 

@@ -253,6 +253,7 @@ def 限价单抛异常(user: Account, num, price, side, grid: Grid):
         方向 = "买入"
     else:
         方向 = "卖出"
+    user.order_map[grid.此网格订单号] = grid
     logger.info(grid.网格名称 + "限价单下单成功！限价单数量：{:6f}".format(num) + " 限价单价格：{:.6f}".format(price) + "方向：" + 方向 + " 当前价格：" + str(user.now_price))
 
 
