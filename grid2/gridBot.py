@@ -96,10 +96,10 @@ def 网格初始化42(user_main_1: Account, user_hedge_1: Account, user_main_2: 
     上边界价格 = 0;
     for i in range(user_main_1.网格数量):
         grid = Grid()
-        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
-        grid.此网格下边界价格 = 当前下边界价格
+        grid.此网格上边界价格 = round((当前下边界价格 + 网格价格范围),user_main_1.交易对价格精度)
+        grid.此网格下边界价格 = round(当前下边界价格,user_main_1.交易对价格精度)
         grid.此网格数量 = user_main_1.单网格数量
-        当前下边界价格 = 当前下边界价格 + 网格价格范围
+        当前下边界价格 = round((当前下边界价格 + 网格价格范围),user_main_1.交易对价格精度)
         上边界价格 = grid.此网格上边界价格
         if i <= (user_main_1.网格数量 / 2 - 1):
             grid.网格名称 = f"{user_main_1.name}网格{i}【{user_main_1.symbol}】"
@@ -121,10 +121,10 @@ def 网格初始化42(user_main_1: Account, user_hedge_1: Account, user_main_2: 
     当前下边界价格 = user_hedge_1.网格区间下限
     for i in range(user_hedge_1.网格数量):
         grid = Grid()
-        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
-        grid.此网格下边界价格 = 当前下边界价格
+        grid.此网格上边界价格 = round((当前下边界价格 + 网格价格范围),user_main_1.交易对价格精度)
+        grid.此网格下边界价格 =round( 当前下边界价格,user_main_1.交易对价格精度)
         grid.此网格数量 = user_hedge_1.单网格数量
-        当前下边界价格 = 当前下边界价格 + 网格价格范围
+        当前下边界价格 = round((当前下边界价格 + 网格价格范围),user_main_1.交易对价格精度)
         上边界价格 = grid.此网格上边界价格
         if i <= (user_hedge_1.网格数量 / 2 - 1):
             grid.网格名称 = f"{user_hedge_1.name}网格{i}【{user_hedge_1.symbol}】"

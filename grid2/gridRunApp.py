@@ -22,10 +22,10 @@ def get_main():
     user_main.websocket_symbol = '1000luncusdt'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd   1000luncusdt
     user_main.trade_currency = 'USDT'  # 交易货币  USDT  BUSD
     user_main.position_side = 'SHORT'  # 做多 SHORT   LONG
-    user_main.网格区间上限 = 0.4
-    user_main.网格区间下限 = 0.24
-    user_main.网格限价止损价格 = 0.4001
-    user_main.网格市价止损价格 = 0.4001
+    user_main.网格区间上限 = 0.408
+    user_main.网格区间下限 = 0.248
+    user_main.网格限价止损价格 = 0.4081
+    user_main.网格市价止损价格 = 0.4081
     user_main.网格间距 = 0.0004
     user_main.网格数量 = 398
     user_main.单网格数量 = 60
@@ -39,13 +39,13 @@ def get_hedge():
     user_hedge.websocket_symbol = '1000luncbusd'  # 交易对  luna2busd   ethusdt    1000luncbusd   ethbusd  1000luncusdt
     user_hedge.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_hedge.position_side = 'LONG'  # 做空 SHORT   LONG
-    user_hedge.网格区间上限 = 0.24
-    user_hedge.网格区间下限 = 0.16
+    user_hedge.网格区间上限 = 0.248
+    user_hedge.网格区间下限 = 0.128
     user_hedge.网格限价止损价格 = 0.0799
     user_hedge.网格市价止损价格 = 0.0799
-    user_hedge.网格间距 = 0.0002
+    user_hedge.网格间距 = 0.0003
     user_hedge.网格数量 = 398
-    user_hedge.单网格数量 = 50
+    user_hedge.单网格数量 = 80
     return user_hedge
 
 
@@ -67,7 +67,8 @@ def 处理任务(user: Account, orderId):
             # ba.统计账户挂单详情(user)
             ba.get_webserver_time()
             time.sleep(0.5)
-            newOrderId = str(time.time()).replace(".", "")
+            newOrderId = str(time.time()).replace(".", "")+str(Account.i)
+            Account.i+= 1
             grid.此网格订单号 = newOrderId
             user.order_map[grid.此网格订单号] = grid
             user.任务队列.put(newOrderId)

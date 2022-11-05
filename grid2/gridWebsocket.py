@@ -24,9 +24,6 @@ class PublicGridWebSocket:
         self.user_main.now_price = float(data['p'])
         self.user_hedge.now_price = float(data['p'])
 
-    def on_ping(self, message, data):
-        return
-
     def run(self):
         threading.Thread(target=self.public_ws_run, args={self.user_main}).start()
 
@@ -34,8 +31,19 @@ class PublicGridWebSocket:
         websocket.enableTrace(True)
         self.ws = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + user_main.websocket_symbol + "@markPrice",
                                          on_message=self.on_message,
-                                         on_ping=self.on_ping)
-        self.ws.run_forever(sslopt={"check_hostname": False})
+                                         on_close=self.on_close,
+                                         on_error=self.on_error
+                                         )
+        self.ws.run_forever(sslopt={"check_hostname": False}, ping_interval=60, ping_timeout=10)
+
+    def on_close(self, code, reason):
+        logger.info(f"{self.user_main.name}：公共连接关闭，code：{code}，reason：{reason},准备断线重连...")
+        self.ws = None
+        self.public_ws_run(self.user_main)
+
+    def on_error(self, error):
+        logger.info(f"{self.user_main.name}：公共连接错误，error：{error} ")
+        logger.debug(type(error))
 
 
 def 触发限价单则新增任务队列(data, user: Account, 配对user: Account, user_main: Account, user_hedge: Account):
@@ -76,46 +84,91 @@ class PrivateGridWebSocket:
     def private_ws1(self):
         websocket.enableTrace(True)
         self.ws1 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_main_1.listen_key,
-                                          on_message=self.ws1_message)
-        self.ws1.run_forever(sslopt={"check_hostname": False})
+                                          on_message=self.ws1_message,
+                                          on_close=self.ws1_close,
+                                          on_error=self.ws1_error
+                                          )
+        self.ws1.run_forever(sslopt={"check_hostname": False}, ping_interval=60, ping_timeout=10)
+
+    def ws1_close(self, code, reason):
+        logger.info(f"{self.user_main_1.name}：ws1关闭，code：{code}，reason：{reason},准备断线重连...")
+        self.ws1 = None
+        self.private_ws1()
+
+    def ws1_error(self, error):
+        logger.info(f"{self.user_main_1.name}：ws1错误，error：{error} ")
+        logger.debug(type(error))
 
     def private_ws2(self):
         websocket.enableTrace(True)
         self.ws2 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_hedge_2.listen_key,
-                                          on_message=self.ws2_message)
-        self.ws2.run_forever(sslopt={"check_hostname": False})
+                                          on_message=self.ws2_message,
+                                          on_close=self.ws2_close,
+                                          on_error=self.ws2_error)
+        self.ws2.run_forever(sslopt={"check_hostname": False}, ping_interval=60, ping_timeout=10)
+
+    def ws2_close(self, code, reason):
+        logger.info(f"{self.user_hedge_2.name}：ws2关闭，code：{code}，reason：{reason},准备断线重连...")
+        self.ws2 = None
+        self.private_ws2()
+
+    def ws2_error(self, error):
+        logger.info(f"{self.user_hedge_2.name}：ws2错误，error：{error} ")
+        logger.debug(type(error))
 
     def private_ws1_1(self):
         websocket.enableTrace(True)
         self.ws1_1 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_main_2.listen_key,
-                                            on_message=self.ws1_1_message)
-        self.ws1_1.run_forever(sslopt={"check_hostname": False})
+                                            on_message=self.ws1_1_message,
+                                            on_close=self.ws1_1_close,
+                                            on_error=self.ws1_1_error)
+        self.ws1_1.run_forever(sslopt={"check_hostname": False}, ping_interval=60, ping_timeout=10)
+
+    def ws1_1_close(self, code, reason):
+        logger.info(f"{self.user_main_2.name}：ws1_1关闭，code：{code}，reason：{reason},准备断线重连...")
+        self.ws1_1 = None
+        self.private_ws1_1()
+
+    def ws1_1_error(self, error):
+        logger.info(f"{self.user_main_2.name}：ws1_1错误，error：{error} ")
+        logger.debug(type(error))
 
     def private_ws2_2(self):
         websocket.enableTrace(True)
         self.ws2_2 = websocket.WebSocketApp("wss://fstream.binance.com/ws/" + self.user_hedge_2.listen_key,
-                                            on_message=self.ws2_2_message)
-        self.ws2_2.run_forever(sslopt={"check_hostname": False})
+                                            on_message=self.ws2_2_message,
+                                            on_close=self.ws2_2_close,
+                                            on_error=self.ws2_2_error)
+        self.ws2_2.run_forever(sslopt={"check_hostname": False}, ping_interval=60, ping_timeout=10)
 
-    def ws1_message(self, ws, message):
+    def ws2_2_close(self, code, reason):
+        logger.info(f"{self.user_hedge_2.name}：ws2_2关闭，code：{code}，reason：{reason},准备断线重连...")
+        self.ws2_2 = None
+        self.private_ws2_2()
+
+    def ws2_2_error(self, error):
+        logger.info(f"{self.user_hedge_2.name}：ws2_2错误，error：{error} ")
+        logger.debug(type(error))
+
+    def ws1_message(self,ws, message):
         data = json.loads(message)
         self.如果仓位为0且满足条件则全部平仓(data, self.user_main_1)
         触发限价单则新增任务队列(data, self.user_main_1, self.user_main_1, self.user_main_1, self.user_hedge_1)
 
-    def ws1_1_message(self, ws, message):
+    def ws1_1_message(self,ws, message):
         data = json.loads(message)
         self.如果仓位为0且满足条件则全部平仓(data, self.user_main_2)
-        触发限价单则新增任务队列(data, self.user_main_2, self.user_main_1, self.user_main_1, self.user_hedge_1)
+        # 触发限价单则新增任务队列(data, self.user_main_2, self.user_main_1, self.user_main_1, self.user_hedge_1)
 
-    def ws2_message(self, ws, message):
+    def ws2_message(self,ws, message):
         data = json.loads(message)
         self.如果仓位为0且满足条件则全部平仓(data, self.user_hedge_1)
         触发限价单则新增任务队列(data, self.user_hedge_1, self.user_hedge_1, self.user_main_1, self.user_hedge_1)
 
-    def ws2_2_message(self, ws, message):
+    def ws2_2_message(self,ws, message):
         data = json.loads(message)
         self.如果仓位为0且满足条件则全部平仓(data, self.user_hedge_2)
-        触发限价单则新增任务队列(data, self.user_hedge_2, self.user_hedge_1, self.user_main_1, self.user_hedge_1)
+        # 触发限价单则新增任务队列(data, self.user_hedge_2, self.user_hedge_1, self.user_main_1, self.user_hedge_1)
 
     def 如果仓位为0且满足条件则全部平仓(self, data, user: Account):
         if data['e'] == 'ACCOUNT_UPDATE':

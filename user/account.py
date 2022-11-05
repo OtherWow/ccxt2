@@ -3,6 +3,7 @@ from queue import Queue
 
 
 class Account(object):
+    i=0
     executor = ThreadPoolExecutor(max_workers=50, thread_name_prefix='挂单线程')
     def __init__(self, name):
         # 项目运行需要的参数
