@@ -26,8 +26,9 @@ def get_main():
     user_main.网格区间下限 = 0.24
     user_main.网格限价止损价格 = 0.4001
     user_main.网格市价止损价格 = 0.4001
+    user_main.网格间距 = 0.0004
     user_main.网格数量 = 398
-    user_main.单网格数量 = 50
+    user_main.单网格数量 = 60
     return user_main
 
 
@@ -39,11 +40,12 @@ def get_hedge():
     user_hedge.trade_currency = 'BUSD'  # 交易货币  USDT  BUSD
     user_hedge.position_side = 'LONG'  # 做空 SHORT   LONG
     user_hedge.网格区间上限 = 0.24
-    user_hedge.网格区间下限 = 0.08
+    user_hedge.网格区间下限 = 0.16
     user_hedge.网格限价止损价格 = 0.0799
     user_hedge.网格市价止损价格 = 0.0799
+    user_hedge.网格间距 = 0.0002
     user_hedge.网格数量 = 398
-    user_hedge.单网格数量 = 65
+    user_hedge.单网格数量 = 50
     return user_hedge
 
 
@@ -62,20 +64,16 @@ def 处理任务(user: Account, orderId):
             logger.info(f"{grid.网格名称}挂单成功，订单号：{grid.此网格订单号}，价格：{user.order_info['price']}，数量：{user.order_info['origQty']}，方向：{user.order_info['side']}")  # ，已配对次数：【{user.已配对次数}】
         except:
             logger.exception(f"{grid.网格名称} 处理任务失败! 准备重试！")
-            ba.统计账户挂单详情(user)
+            # ba.统计账户挂单详情(user)
             ba.get_webserver_time()
             time.sleep(0.5)
-            orderId = str(time.time()).replace(".", "")
-            grid.此网格订单号 = orderId
+            newOrderId = str(time.time()).replace(".", "")
+            grid.此网格订单号 = newOrderId
             user.order_map[grid.此网格订单号] = grid
-            user.任务队列.put(orderId)
+            user.任务队列.put(newOrderId)
         return
     else:
         logger.info(f"订单号{orderId} 异常 没有匹配到对应的订单号！")
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -121,7 +119,6 @@ if __name__ == '__main__':
     logger.info("私有化线程启动完毕,进入task...")
     time.sleep(4)
 
-
     # gridBot.创建网格(user_main)
     # ba.限价单(user_main, 30,0.18, 'BUY')
     # ba.限价单(user_main, 30,0.1802, 'BUY')
@@ -154,10 +151,10 @@ if __name__ == '__main__':
             Account.executor.submit(lambda p: 处理任务(*p), (user_main_2, orderid))
         if user_hedge_1.初始化完成 and (not user_hedge_1.任务队列.empty()):
             orderid = user_hedge_1.任务队列.get()
-            Account.executor.submit(lambda p: 处理任务(*p), (user_hedge_1,orderid))
+            Account.executor.submit(lambda p: 处理任务(*p), (user_hedge_1, orderid))
         if user_hedge_2.初始化完成 and (not user_hedge_2.任务队列.empty()):
             orderid = user_hedge_2.任务队列.get()
-            Account.executor.submit(lambda p: 处理任务(*p), (user_hedge_2,orderid))
+            Account.executor.submit(lambda p: 处理任务(*p), (user_hedge_2, orderid))
     # if user_main.need_sign:
     #     logger.info("需要信号开单，开启启动webhooks...")
     #     webhook = Webhooks(user_main, user_hedge)

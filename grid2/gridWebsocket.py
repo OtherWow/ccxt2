@@ -39,18 +39,18 @@ class PublicGridWebSocket:
 
 
 def 触发限价单则新增任务队列(data, user: Account, 配对user: Account, user_main: Account, user_hedge: Account):
-    global 总手续费
-    global 总盈亏
-    if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol) and float(data['o']['rp']) != 0:
-        总手续费 += round(float(data['o']['n']), 7)
-        总盈亏 += round(float(data['o']['rp']), 7)
-        user.手续费 += round(float(data['o']['n']), 7)
-        user.盈亏 += round(float(data['o']['rp']), 7)
-        logger.info(f"总手续费：【{总手续费}】，总盈亏：【{总盈亏}】")
+    # global 总手续费
+    # global 总盈亏
+    # if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol) and float(data['o']['rp']) != 0:
+    #     总手续费 += round(float(data['o']['n']), 7)
+    #     总盈亏 += round(float(data['o']['rp']), 7)
+    #     user.手续费 += round(float(data['o']['n']), 7)
+    #     user.盈亏 += round(float(data['o']['rp']), 7)
+    #     logger.info(f"总手续费：【{总手续费}】，总盈亏：【{总盈亏}】")
     if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol):  # 限价单成交
         if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
             配对user.已配对次数 += 1
-        logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，手续费：【{user.手续费}】，盈亏：【{user.盈亏}】，成交价格：{data['o']['p']}，成交数量：{data['o']['z']}，成交方向：{data['o']['S']}。{user_main.name}已配对【{user_main.已配对次数}】次,{user_hedge.name}已配对【{user_hedge.已配对次数}】次")
+        logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格：{data['o']['p']}，成交数量：{data['o']['z']}，成交方向：{data['o']['S']}。{user_main.name}已配对【{user_main.已配对次数}】次,{user_hedge.name}已配对【{user_hedge.已配对次数}】次")
         user.任务队列.put(str(data['o']['i']))
         return
 

@@ -44,7 +44,7 @@ def 创建网格4(user_main_1: Account, user_hedge_1: Account, user_main_2: Acco
     if user_hedge_2.position_amt != 0:
         logger.info(f"{user_hedge_2.name}账户有持仓，无法创建网格")
         return
-    网格初始化4(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
+    网格初始化42(user_main_1, user_hedge_1, user_main_2, user_hedge_2)
     if user_main_1.position_side == "LONG":  # 做多
         触发价 = user_main_1.网格限价止损价格 / (1 - user_main_1.价格保护百分比 / 2)
         数量 = user_main_1.网格数量 * user_main_1.单网格数量 / 2
@@ -79,6 +79,75 @@ def 创建网格4(user_main_1: Account, user_hedge_1: Account, user_main_2: Acco
         f"{user_main_1.name}创建网格成功，网格区间【{user_main_1.网格区间下限}，{user_main_1.网格区间上限}】，网格数量{user_main_1.网格数量}，单网格数量{user_main_1.单网格数量}，网格限价止损价格{user_main_1.网格限价止损价格}，网格市价止损价格{user_main_1.网格市价止损价格}")
     logger.info(
         f"{user_hedge_1.name}创建网格成功，网格区间【{user_hedge_1.网格区间下限}，{user_hedge_1.网格区间上限}】，网格数量{user_hedge_1.网格数量}，单网格数量{user_hedge_1.单网格数量}，网格限价止损价格{user_hedge_1.网格限价止损价格}，网格市价止损价格{user_hedge_1.网格市价止损价格}")
+    return
+
+
+def 网格初始化42(user_main_1: Account, user_hedge_1: Account, user_main_2: Account, user_hedge_2: Account):
+    user_main_1.grid_list.clear()
+    user_main_2.grid_list.clear()
+    user_hedge_1.grid_list.clear()
+    user_hedge_2.grid_list.clear()
+    user_main_1.order_map.clear()
+    user_main_2.order_map.clear()
+    user_hedge_1.order_map.clear()
+    user_hedge_2.order_map.clear()
+    网格价格范围 = user_main_1.网格间距
+    当前下边界价格 = user_main_1.网格区间下限
+    上边界价格 = 0;
+    for i in range(user_main_1.网格数量):
+        grid = Grid()
+        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
+        grid.此网格下边界价格 = 当前下边界价格
+        grid.此网格数量 = user_main_1.单网格数量
+        当前下边界价格 = 当前下边界价格 + 网格价格范围
+        上边界价格 = grid.此网格上边界价格
+        if i <= (user_main_1.网格数量 / 2 - 1):
+            grid.网格名称 = f"{user_main_1.name}网格{i}【{user_main_1.symbol}】"
+            user_main_1.grid_list.append(grid)
+        else:
+            grid.网格名称 = f"{user_main_1.name}网格{i}【{user_main_2.symbol}】"
+            user_main_2.grid_list.append(grid)
+    if user_main_1.position_side == "SHORT":
+        user_main_1.网格限价止损价格 = 上边界价格 + 0.0001
+        user_main_1.网格市价止损价格 = 上边界价格 + 0.0001
+        user_main_2.网格限价止损价格 = 上边界价格 + 0.0001
+        user_main_2.网格市价止损价格 = 上边界价格 + 0.0001
+    else:
+        user_main_1.网格限价止损价格 = user_main_1.网格区间下限 - 0.0001
+        user_main_1.网格市价止损价格 = user_main_1.网格区间下限 - 0.0001
+        user_main_2.网格限价止损价格 = user_main_2.网格区间下限 - 0.0001
+        user_main_2.网格市价止损价格 = user_main_2.网格区间下限 - 0.0001
+    网格价格范围 = user_hedge_1.网格间距
+    当前下边界价格 = user_hedge_1.网格区间下限
+    for i in range(user_hedge_1.网格数量):
+        grid = Grid()
+        grid.此网格上边界价格 = 当前下边界价格 + 网格价格范围
+        grid.此网格下边界价格 = 当前下边界价格
+        grid.此网格数量 = user_hedge_1.单网格数量
+        当前下边界价格 = 当前下边界价格 + 网格价格范围
+        上边界价格 = grid.此网格上边界价格
+        if i <= (user_hedge_1.网格数量 / 2 - 1):
+            grid.网格名称 = f"{user_hedge_1.name}网格{i}【{user_hedge_1.symbol}】"
+            user_hedge_1.grid_list.append(grid)
+        else:
+            grid.网格名称 = f"{user_hedge_1.name}网格{i}【{user_hedge_2.symbol}】"
+            user_hedge_2.grid_list.append(grid)
+    if user_hedge_1.position_side == "SHORT":
+        user_hedge_1.网格限价止损价格 = 上边界价格 + 0.0001
+        user_hedge_1.网格市价止损价格 = 上边界价格 + 0.0001
+        user_hedge_2.网格限价止损价格 = 上边界价格 + 0.0001
+        user_hedge_2.网格市价止损价格 = 上边界价格 + 0.0001
+    else:
+        user_hedge_1.网格限价止损价格 = user_hedge_1.网格区间下限 - 0.0001
+        user_hedge_1.网格市价止损价格 = user_hedge_1.网格区间下限 - 0.0001
+        user_hedge_2.网格限价止损价格 = user_hedge_2.网格区间下限 - 0.0001
+        user_hedge_2.网格市价止损价格 = user_hedge_2.网格区间下限 - 0.0001
+    校验网格2(user_main_1, user_hedge_1)
+    校验网格2(user_main_2, user_hedge_2)
+    user_main_1.初始化完成 = True
+    user_main_2.初始化完成 = True
+    user_hedge_1.初始化完成 = True
+    user_hedge_2.初始化完成 = True
     return
 
 
