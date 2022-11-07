@@ -55,7 +55,7 @@ def 触发限价单则新增任务队列(data, user: Account, 配对user: Accoun
     #     user.手续费 += round(float(data['o']['n']), 7)
     #     user.盈亏 += round(float(data['o']['rp']), 7)
     #     logger.info(f"总手续费：【{总手续费}】，总盈亏：【{总盈亏}】")
-    if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol):  # 限价单成交
+    if data['e'] == 'ORDER_TRADE_UPDATE' and data['o']['o'] == 'LIMIT' and data['o']['x'] == 'TRADE' and data['o']['X'] == 'FILLED' and (data['o']['s'] == user.symbol and user.trade_currency == data['o']['N']):  # 限价单成交
         if (user.position_side == "LONG" and data['o']['S'] == 'SELL') or (user.position_side == "SHORT" and data['o']['S'] == 'BUY'):
             配对user.已配对次数 += 1
         logger.info(f"{user.name}【{user.symbol}】：限价单{data['o']['i']}成交，成交价格：{data['o']['p']}，成交数量：{data['o']['z']}，成交方向：{data['o']['S']}。{user_main.name}已配对【{user_main.已配对次数}】次,{user_hedge.name}已配对【{user_hedge.已配对次数}】次")
@@ -158,7 +158,7 @@ class PrivateGridWebSocket:
     def ws1_1_message(self,ws, message):
         data = json.loads(message)
         self.如果仓位为0且满足条件则全部平仓(data, self.user_main_2)
-        # 触发限价单则新增任务队列(data, self.user_main_2, self.user_main_1, self.user_main_1, self.user_hedge_1)
+        触发限价单则新增任务队列(data, self.user_main_2, self.user_main_1, self.user_main_1, self.user_hedge_1)
 
     def ws2_message(self,ws, message):
         data = json.loads(message)
@@ -168,7 +168,7 @@ class PrivateGridWebSocket:
     def ws2_2_message(self,ws, message):
         data = json.loads(message)
         self.如果仓位为0且满足条件则全部平仓(data, self.user_hedge_2)
-        # 触发限价单则新增任务队列(data, self.user_hedge_2, self.user_hedge_1, self.user_main_1, self.user_hedge_1)
+        触发限价单则新增任务队列(data, self.user_hedge_2, self.user_hedge_1, self.user_main_1, self.user_hedge_1)
 
     def 如果仓位为0且满足条件则全部平仓(self, data, user: Account):
         if data['e'] == 'ACCOUNT_UPDATE':
